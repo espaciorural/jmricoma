@@ -17,10 +17,10 @@ class Auth extends Controller {
             // Verifica las credenciales del usuario
             if ($accessModel->verificarUsuario($username, $password)) {
                 // Credenciales válidas
-                return $this->response->setJSON(['success' => true, 'message' => 'Inicio de sesión exitoso']);
+                return $this->response->setJSON(['success' => true]);
             } else {
                 // Credenciales inválidas
-                return $this->response->setJSON(['success' => false, 'message' => 'Credenciales inválidas']);
+                return $this->response->setJSON(['success' => false]);
             }
         }
     }

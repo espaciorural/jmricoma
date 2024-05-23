@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from 'react-router-dom';
 import axios from "axios";
 import literals from '../literals/es'; 
 
@@ -7,6 +8,7 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   // Añade un nuevo estado para almacenar mensajes para el usuario
   const [message, setMessage] = useState("");
+  const navigate = useNavigate();
 
   const { login } = literals; 
 
@@ -19,7 +21,9 @@ function LoginForm() {
         password,
       });
     if (response.data.success) {
-        window.location.href = "/";
+        localStorage.setItem('token', response.data.token); 
+        console.log('acceso correcto');
+        navigate('/dashboard'); 
       } else {
         setMessage(login.failureMessage);
       }

@@ -8,7 +8,23 @@ const literals = {
       failureMessage: "Credenciales inválidas",
       errorMessage: "Error de inicio de sesión",
     },
+    dashboard: {
+      homeLabel: "Inicio",
+      servicesLabel: "Servicios",
+      exitLabel: "Salir",
+      titles: {
+        "/dashboard": "Inicio",
+      }
+    },
   };
+  export const getTitleByPath = (currentPage) => {
+    const titles = {
+      Home: "Inicio",
+      Services: "Servicios",
+    };
   
+    return titles[currentPage] || "Inicio";
+  };
+
   export default literals;
   

@@ -1,0 +1,196 @@
+/* Home.css */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Roboto:wght@400;700&display=swap');
+
+body {
+  font-family: 'Roboto', sans-serif;
+  margin: 0;
+  padding: 0;
+  color:#1a1a1a;
+}
+
+h1 {
+  font-family: 'Roboto', sans-serif;
+  font-size: 72px;
+  color:#fff;
+}
+
+h2 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 52px;
+  color:#d5d5d5
+}
+
+h3 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 32px;
+  color:#ababab
+}
+
+.content {
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 60vh;
+  background-size: cover; /* Ajustar según la imagen */
+  background-repeat: repeat-x; /* Repetir horizontalmente */
+  z-index: -1;
+  animation: moveGradient 60s linear infinite; 
+}
+
+@keyframes moveGradient {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 100% 0%;
+  }
+}
+
+.content-wrapper {
+  position: relative;
+  z-index: 1;
+  top: 8rem;
+}
+
+.skills {
+  color:rgb(247, 250, 222,0.5);
+  font-size: 34px;
+  margin-top:50px;
+  position: relative;
+  height: 2em; /* Ajusta esto según el tamaño de la fuente */
+  overflow: hidden; /* Evita el desbordamiento */
+  display: flex;
+  align-items: center; /* Asegura que el texto esté centrado verticalmente */
+}
+
+.skill {
+  position: absolute;
+  width: 100%;
+  text-align: center;
+}
+
+.donut {
+  width: 200px;
+  height: 200px;
+  border: 3px solid #06032e;
+  border-radius: 50%;
+  box-sizing: border-box;
+  background-image: url('http://jmricoma/uploads/josep.webp');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.chart-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px; 
+}
+
+.descriptions-container {
+  position: relative;
+  margin-top: 290px;
+  margin-bottom:80px;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.description-block {
+  display: flex;
+  align-items: flex-start;
+  gap: 80px;
+}
+
+.description {
+  flex: 1;
+  text-align: justify;
+  font-size: 20px;
+}
+
+.description-image {
+  max-width: 150px;
+  height: auto;
+}
+
+/* Animación de fondo */
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+/* Responsive styles */
+@media (max-width: 972px) {
+  .descriptions-container {
+    max-width: 100%;
+    padding: 0 50px;
+  }
+}
+@media (max-width: 768px) {
+  h1 {
+    font-size: 48px;
+  }
+  h2 {
+    font-size: 34px;
+  }
+  h3 {
+    font-size: 26px;
+  }
+  .content {
+    font-size: 1.2rem;
+  }
+  .donut {
+    width: 150px;
+    height: 150px;
+  }
+  .descriptions-container {
+    margin-top: 180px;
+  }
+  .description {
+    font-size: 18px;
+  }
+  .description-block {
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  h1 {
+    font-size: 36px;
+  }
+  h2 {
+    font-size: 26px;
+  }
+  h3 {
+    font-size: 18px;
+  }
+  .content {
+    font-size: 1rem;
+  }
+  .content-wrapper {
+    top: 10rem;
+  }
+  .descriptions-container {
+    margin-top: 200px;
+    padding: 0 30px;
+  }
+  .description {
+    font-size: 16px;
+  }
+  .donut {
+    width: 130px;
+    height: 130px;
+  }
+}

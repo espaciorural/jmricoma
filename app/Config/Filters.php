@@ -26,8 +26,7 @@ class Filters extends BaseConfig
             'cors'
         ],
         'after' => [
-            'toolbar',
-            'cors'
+
         ],
     ];
 

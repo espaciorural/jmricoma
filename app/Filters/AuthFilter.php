@@ -9,8 +9,9 @@ use Firebase\JWT\Key;
 
 class AuthFilter implements FilterInterface {
     public function before(RequestInterface $request, $arguments = null) {
+        $method = $_SERVER['REQUEST_METHOD'];
         // Omitir la verificación de autenticación para solicitudes OPTIONS
-        if ($request->getMethod() === 'options') {
+        if ($method === 'options') {
             return; // Permite que la solicitud OPTIONS continúe sin autenticación
         }
 

@@ -7,20 +7,18 @@ use CodeIgniter\Filters\FilterInterface;
 class Cors implements FilterInterface {
     public function before(RequestInterface $request, $arguments = null)
     {
-        $method = $_SERVER['REQUEST_METHOD'];
+        $origin = $request->getHeaderLine('Origin');
+        $allowedOrigins = ['http://jmricoma', 'http://localhost:3000'];
 
-        if ($method === 'OPTIONS') {
-            $origin = $request->getHeaderLine('Origin');
-            $allowedOrigins = ['http://jmricoma', 'http://localhost:3000'];
+        if (in_array($origin, $allowedOrigins)) {
+            header("Access-Control-Allow-Origin: $origin");
+            header("Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT, DELETE");
+            header("Access-Control-Allow-Headers: Origin, Content-Type, Accept, Authorization, X-Requested-With");
+            header('Access-Control-Allow-Credentials: true');
+            header('Access-Control-Max-Age: 86400'); // Cache preflight request for 1 day
+        }
 
-            if (in_array($origin, $allowedOrigins)) {
-                header("Access-Control-Allow-Origin: $origin");
-                header("Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT, DELETE");
-                header("Access-Control-Allow-Headers: Origin, Content-Type, Accept, Authorization, X-Requested-With");
-                header('Access-Control-Allow-Credentials: true');
-                header('Access-Control-Max-Age: 86400'); // Cache preflight request for 1 day
-            }
-            // Terminate further execution for OPTIONS requests
+        if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
             exit(0);
         }
     }

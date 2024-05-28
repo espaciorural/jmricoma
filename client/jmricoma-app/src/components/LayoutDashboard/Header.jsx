@@ -1,6 +1,6 @@
 import React from 'react';
 import { useDashboard } from './../DashboardContext';
-import literals, { getTitleByPath } from '../../literals/es';
+import { getTitleByPath } from '../../literals/es';
 
 function Header() {
   // Obtener la fecha actual y formatearla

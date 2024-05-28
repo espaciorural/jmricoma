@@ -20,8 +20,8 @@ function LoginForm() {
         username,
         password,
       });
-    if (response.data.success) {
-        localStorage.setItem('token', response.data.token); 
+      if (response.data.success) {
+        localStorage.setItem('token', response.data.token);
         console.log('acceso correcto');
         navigate('/dashboard'); 
       } else {

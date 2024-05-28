@@ -7,12 +7,12 @@ use CodeIgniter\Exceptions\PageNotFoundException;
 
 class SectionController extends BaseController
 {
-    protected $serviceModel;
+    protected $sectionModel;
 
     public function __construct()
     {
         // Cargar el modelo
-        $this->serviceModel = new SectionModel();
+        $this->sectionModel = new SectionModel();
     }
 
     public function index()
@@ -20,9 +20,9 @@ class SectionController extends BaseController
         $id_lang = $this->request->getGet('lang');
         
         if ($id_lang) {
-            $sections = $this->serviceModel->where('id_lang', $id_lang)->findAll();
+            $sections = $this->sectionModel->where('id_lang', $id_lang)->findAll();
         } else {
-            $sections = $this->serviceModel->findAll();
+            $sections = $this->sectionModel->findAll();
         }
     
         return $this->response->setJSON($sections);

@@ -12,31 +12,42 @@ class ImageController extends BaseController
     public function uploadImage()
     {
         $model = new ImageModel();
-
         $file = $this->request->getFile('file');
+    
         if ($file->isValid() && !$file->hasMoved()) {
             // Genera un nuevo nombre de archivo para evitar conflictos y conservar la extensión
-            $newFilename = $file->getRandomName();
+            if ($this->request->getPost('newFilename')) {
+                $newFilename = $this->request->getPost('newFilename');
+            } else {
+                $newFilename = $file->getRandomName();
+            }
             // Mueve el archivo a la carpeta de almacenamiento final
             $file->move('uploads', $newFilename);
-
+    
             // 'path' debería ser la ruta donde se almacena el archivo en el servidor
             $data = [
                 'path' => 'uploads/' . $newFilename, // Ajusta esta ruta según tus necesidades
                 'id_section' => $this->request->getPost('id_section'),
                 'type' => $this->request->getPost('type'),
             ];
-
-            if ($model->insert($data)) {
-                return $this->response->setJSON(['status' => 'success', 'message' => 'Imagen cargada correctamente']);
+    
+            // Verifica si el 'id_section' está presente en el POST
+            if ($this->request->getPost('id_section')) {
+                if ($model->insert($data)) {
+                    return $this->response->setJSON(['status' => 'success', 'message' => 'Imagen cargada correctamente y datos guardados']);
+                } else {
+                    return $this->response->setStatusCode(500)->setJSON(['status' => 'error', 'message' => 'No se pudo cargar la imagen']);
+                }
             } else {
-                return $this->response->setStatusCode(500)->setJSON(['status' => 'error', 'message' => 'No se pudo cargar la imagen']);
+                // Solo se sube la imagen, no se inserta en la base de datos
+                return $this->response->setJSON(['status' => 'success', 'message' => 'Imagen cargada correctamente, pero sin datos guardados']);
             }
         } else {
             // Manejar error de carga
             return $this->response->setStatusCode(400)->setJSON(['status' => 'error', 'message' => 'Archivo inválido o error de carga']);
         }
     }
+    
 
     public function getImages()
     {
@@ -69,24 +80,55 @@ class ImageController extends BaseController
 
     public function deleteImage($id)
     {
-        $model = new ImageModel();
-
-        // Opcional: Buscar la imagen para obtener la ruta del archivo y eliminar el archivo
-        $image = $model->find($id);
-        if (!$image) {
-            return $this->failNotFound('No se encontró la imagen con ID: ' . $id);
-        }
-
-        // Eliminar el archivo de imagen del sistema de archivos
-        if (file_exists($image['path'])) {
-            unlink($image['path']);
-        }
-
-        // Eliminar la entrada de la imagen de la base de datos
-        if ($model->delete($id)) {
-            return $this->respondDeleted(['message' => 'Imagen eliminada correctamente', 'id' => $id]);
+        // Verificar si $id es un número
+        if (!is_numeric($id)) {
+            // Buscar archivos en la carpeta 'uploads' que coincidan con el nombre $id sin importar la extensión
+            $path = FCPATH . 'uploads/';
+            $files = glob($path . $id . '.*');
+            
+            // Eliminar todos los archivos encontrados
+            foreach ($files as $file) {
+                if (file_exists($file)) {
+                    unlink($file);
+                }
+            }
+            
+            return $this->response->setJSON(['status' => 'success', 'message' => 'Archivos eliminados correctamente']);
         } else {
-            return $this->failServerError('No se pudo eliminar la imagen');
+            $model = new ImageModel();
+    
+            // Buscar la imagen para obtener la ruta del archivo y eliminar el archivo
+            $image = $model->find($id);
+            if (!$image) {
+                return $this->failNotFound('No se encontró la imagen con ID: ' . $id);
+            }
+    
+            // Eliminar el archivo de imagen del sistema de archivos
+            if (file_exists($image['path'])) {
+                unlink($image['path']);
+            }
+    
+            // Eliminar la entrada de la imagen de la base de datos
+            if ($model->delete($id)) {
+                return $this->respondDeleted(['message' => 'Imagen eliminada correctamente', 'id' => $id]);
+            } else {
+                return $this->failServerError('No se pudo eliminar la imagen');
+            }
         }
     }
+
+    public function checkImage($resource,$id)
+    {
+        $path = FCPATH . 'uploads/';
+        $files = glob($path . $resource.'_' . $id . '.*');
+        if (!empty($files)) {
+            $relativePath = str_replace(FCPATH, '', $files[0]);
+            return $this->response->setJSON(['exists' => true, 'url' => base_url($relativePath)]);
+        } else {
+            return $this->response->setJSON(['exists' => false]);
+        }
+    }
+    
+
+    
 }

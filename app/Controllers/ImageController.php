@@ -2,7 +2,9 @@
 
 namespace App\Controllers;
 
+use App\Application\Images\Input\UploadImageInput;
 use App\Infrastructure\DependencyInjection\ApplicationServices;
+use App\Infrastructure\Http\Requests\UploadImageRequest;
 use CodeIgniter\API\ResponseTrait;
 use RuntimeException;
 
@@ -12,12 +14,24 @@ class ImageController extends BaseController
 
     public function uploadImage()
     {
+        if (! $this->validate(UploadImageRequest::rules())) {
+            return $this->response
+                ->setStatusCode(400)
+                ->setJSON([
+                    'status' => 'error',
+                    'message' => 'Archivo invalido o error de carga',
+                    'errors' => $this->validator->getErrors(),
+                ]);
+        }
+
         try {
             $result = ApplicationServices::uploadImageUseCase()->execute(
-                $this->request->getFile('file'),
-                $this->request->getPost('newFilename') ?: null,
-                $this->request->getPost('id_section') ? (int) $this->request->getPost('id_section') : null,
-                $this->request->getPost('type')
+                new UploadImageInput(
+                    $this->request->getFile('file'),
+                    $this->request->getPost('newFilename') ?: null,
+                    $this->request->getPost('id_section') ? (int) $this->request->getPost('id_section') : null,
+                    $this->request->getPost('type')
+                )
             );
         } catch (RuntimeException $exception) {
             log_message('error', 'Image upload failed: ' . $exception->getMessage());

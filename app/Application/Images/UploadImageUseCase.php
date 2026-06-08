@@ -2,6 +2,7 @@
 
 namespace App\Application\Images;
 
+use App\Application\Images\Input\UploadImageInput;
 use App\Domain\Images\Image;
 use App\Domain\Images\ImageRepositoryInterface;
 use App\Domain\Images\ImageStorageInterface;
@@ -14,12 +15,12 @@ final class UploadImageUseCase
     ) {
     }
 
-    public function execute($uploadedFile, ?string $newFilename, ?int $sectionId, ?string $type): array
+    public function execute(UploadImageInput $input): array
     {
-        $relativePath = $this->imageStorage->store($uploadedFile, $newFilename);
+        $relativePath = $this->imageStorage->store($input->uploadedFile, $input->newFilename);
 
-        if ($sectionId !== null) {
-            $this->imageRepository->create(new Image(null, $relativePath, $sectionId, (string) $type));
+        if ($input->sectionId !== null) {
+            $this->imageRepository->create(new Image(null, $relativePath, $input->sectionId, (string) $input->type));
 
             return [
                 'status' => 'success',

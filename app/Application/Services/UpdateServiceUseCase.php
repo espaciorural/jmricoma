@@ -2,7 +2,7 @@
 
 namespace App\Application\Services;
 
-use App\Domain\Services\Service;
+use App\Application\Services\Input\ServiceInput;
 use App\Domain\Services\ServiceRepositoryInterface;
 
 final class UpdateServiceUseCase
@@ -11,8 +11,8 @@ final class UpdateServiceUseCase
     {
     }
 
-    public function execute(int $id, array $data): bool
+    public function execute(int $id, ServiceInput $input): bool
     {
-        return $this->serviceRepository->update($id, Service::fromArray($data));
+        return $this->serviceRepository->update($id, $input->toService());
     }
 }

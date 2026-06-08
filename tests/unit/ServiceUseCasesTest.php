@@ -3,6 +3,7 @@
 use App\Application\Services\CreateServiceUseCase;
 use App\Application\Services\DeleteServiceUseCase;
 use App\Application\Services\GetServiceUseCase;
+use App\Application\Services\Input\ServiceInput;
 use App\Application\Services\ListServicesUseCase;
 use App\Application\Services\UpdateServiceUseCase;
 use App\Domain\Services\Service;
@@ -52,13 +53,13 @@ final class ServiceUseCasesTest extends TestCase
     {
         $repository = new InMemoryServiceRepository();
 
-        $service = (new CreateServiceUseCase($repository))->execute([
+        $service = (new CreateServiceUseCase($repository))->execute(ServiceInput::fromArray([
             'title' => 'Maintenance',
             'description' => 'Monthly support',
             'id_lang' => 1,
             'status' => 1,
             'main_service_id' => null,
-        ]);
+        ]));
 
         $this->assertSame(1, $service['id']);
         $this->assertSame('Maintenance', $service['title']);
@@ -77,13 +78,13 @@ final class ServiceUseCasesTest extends TestCase
             ]),
         ]);
 
-        $updated = (new UpdateServiceUseCase($repository))->execute(1, [
+        $updated = (new UpdateServiceUseCase($repository))->execute(1, ServiceInput::fromArray([
             'title' => 'New title',
             'description' => null,
             'id_lang' => 1,
             'status' => 1,
             'main_service_id' => null,
-        ]);
+        ]));
 
         $service = (new GetServiceUseCase($repository))->execute(1);
 

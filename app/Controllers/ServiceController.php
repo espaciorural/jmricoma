@@ -2,7 +2,9 @@
 
 namespace App\Controllers;
 
+use App\Application\Services\Input\ServiceInput;
 use App\Infrastructure\DependencyInjection\ApplicationServices;
+use App\Infrastructure\Http\Requests\ServiceRequest;
 use CodeIgniter\RESTful\ResourceController;
 
 class ServiceController extends ResourceController
@@ -31,12 +33,12 @@ class ServiceController extends ResourceController
     {
         $data = $this->request->getJSON(true);
 
-        if (! $this->isValidServicePayload()) {
+        if (! $this->validate(ServiceRequest::rules())) {
             return $this->failValidationErrors($this->validator->getErrors());
         }
 
         return $this->respondCreated(
-            ApplicationServices::createServiceUseCase()->execute($data),
+            ApplicationServices::createServiceUseCase()->execute(ServiceInput::fromArray($data)),
             'Service created'
         );
     }
@@ -45,11 +47,11 @@ class ServiceController extends ResourceController
     {
         $data = $this->request->getJSON(true);
 
-        if (! $this->isValidServicePayload()) {
+        if (! $this->validate(ServiceRequest::rules())) {
             return $this->failValidationErrors($this->validator->getErrors());
         }
 
-        if (ApplicationServices::updateServiceUseCase()->execute((int) $id, $data)) {
+        if (ApplicationServices::updateServiceUseCase()->execute((int) $id, ServiceInput::fromArray($data))) {
             return $this->respond(['status' => 'success', 'message' => 'Service updated']);
         }
 
@@ -70,13 +72,4 @@ class ServiceController extends ResourceController
         return;
     }
 
-    private function isValidServicePayload(): bool
-    {
-        return $this->validate([
-            'title' => 'required|max_length[255]',
-            'id_lang' => 'required|is_natural_no_zero',
-            'status' => 'required|in_list[0,1]',
-            'main_service_id' => 'permit_empty|is_natural_no_zero',
-        ]);
-    }
 }

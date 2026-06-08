@@ -3,6 +3,8 @@
 use App\Application\Images\CheckImageUseCase;
 use App\Application\Images\DeleteImageUseCase;
 use App\Application\Images\GetImagesUseCase;
+use App\Application\Images\Input\UploadImageInput;
+use App\Application\Images\UploadImageUseCase;
 use App\Domain\Images\Image;
 use App\Domain\Images\ImageRepositoryInterface;
 use App\Domain\Images\ImageStorageInterface;
@@ -59,6 +61,21 @@ final class ImageUseCasesTest extends TestCase
         $this->assertTrue($result['deleted']);
         $this->assertSame('uploads/header.webp', $storage->deletedRelativePath);
         $this->assertNull($repository->findById(1));
+    }
+
+    public function testItUploadsImageAndStoresMetadataWhenSectionIsProvided(): void
+    {
+        $repository = new InMemoryImageRepository();
+        $storage = new FakeImageStorage();
+
+        $result = (new UploadImageUseCase($storage, $repository))->execute(
+            new UploadImageInput('fake-file', 'services_1.webp', 1, 'services')
+        );
+
+        $images = $repository->findBySectionAndType(1, 'services');
+
+        $this->assertSame('success', $result['status']);
+        $this->assertSame('uploads/services_1.webp', $images[0]->path());
     }
 }
 

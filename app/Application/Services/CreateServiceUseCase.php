@@ -2,7 +2,7 @@
 
 namespace App\Application\Services;
 
-use App\Domain\Services\Service;
+use App\Application\Services\Input\ServiceInput;
 use App\Domain\Services\ServiceRepositoryInterface;
 
 final class CreateServiceUseCase
@@ -11,10 +11,10 @@ final class CreateServiceUseCase
     {
     }
 
-    public function execute(array $data): array
+    public function execute(ServiceInput $input): array
     {
         return $this->serviceRepository
-            ->create(Service::fromArray($data))
+            ->create($input->toService())
             ->toArray();
     }
 }

@@ -7,7 +7,7 @@ function Portfolio() {
   const sectionId = "3";
   const [idiomas, setIdiomas] = useState(null);
   const RESOURCE = 'portfolio';
-  const MAIN_RESOURCE_ID_FIELD = `main_portolio_id`;
+  const MAIN_RESOURCE_ID_FIELD = `main_portfolio_id`;
 
   useEffect(() => {
     axios

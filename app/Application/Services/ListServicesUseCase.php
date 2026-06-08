@@ -2,6 +2,7 @@
 
 namespace App\Application\Services;
 
+use App\Application\Services\Output\ServiceView;
 use App\Domain\Services\ServiceRepositoryInterface;
 
 final class ListServicesUseCase
@@ -13,7 +14,7 @@ final class ListServicesUseCase
     public function execute(): array
     {
         return array_map(
-            fn ($service): array => $service->toArray(),
+            fn ($service): ServiceView => ServiceView::fromService($service),
             $this->serviceRepository->findAll()
         );
     }

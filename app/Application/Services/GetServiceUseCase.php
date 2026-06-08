@@ -2,6 +2,7 @@
 
 namespace App\Application\Services;
 
+use App\Application\Services\Output\ServiceView;
 use App\Domain\Services\ServiceRepositoryInterface;
 
 final class GetServiceUseCase
@@ -10,10 +11,14 @@ final class GetServiceUseCase
     {
     }
 
-    public function execute(int $id): ?array
+    public function execute(int $id): ?ServiceView
     {
         $service = $this->serviceRepository->findById($id);
 
-        return $service?->toArray();
+        if ($service === null) {
+            return null;
+        }
+
+        return ServiceView::fromService($service);
     }
 }

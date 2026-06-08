@@ -7,6 +7,11 @@ use App\Application\Images\CheckImageUseCase;
 use App\Application\Images\DeleteImageUseCase;
 use App\Application\Images\GetImagesUseCase;
 use App\Application\Images\UploadImageUseCase;
+use App\Application\Portfolio\CreatePortfolioUseCase;
+use App\Application\Portfolio\DeletePortfolioUseCase;
+use App\Application\Portfolio\GetPortfolioUseCase;
+use App\Application\Portfolio\ListPortfolioUseCase;
+use App\Application\Portfolio\UpdatePortfolioUseCase;
 use App\Application\Services\CreateServiceUseCase;
 use App\Application\Services\DeleteServiceUseCase;
 use App\Application\Services\GetServiceUseCase;
@@ -15,6 +20,7 @@ use App\Application\Services\UpdateServiceUseCase;
 use App\Domain\Images\ImageRepositoryInterface;
 use App\Domain\Images\ImageStorageInterface;
 use App\Domain\Images\PublicUrlGeneratorInterface;
+use App\Domain\Portfolio\PortfolioRepositoryInterface;
 use App\Domain\Services\ServiceRepositoryInterface;
 use App\Infrastructure\Auth\CodeIgniterAccessRepository;
 use App\Infrastructure\Auth\JwtTokenGenerator;
@@ -22,9 +28,11 @@ use App\Infrastructure\Auth\NativePasswordVerifier;
 use App\Infrastructure\Images\CodeIgniterImageRepository;
 use App\Infrastructure\Images\CodeIgniterPublicUrlGenerator;
 use App\Infrastructure\Images\LocalPublicImageStorage;
+use App\Infrastructure\Portfolio\CodeIgniterPortfolioRepository;
 use App\Infrastructure\Services\CodeIgniterServiceRepository;
 use App\Models\AccessModel;
 use App\Models\ImageModel;
+use App\Models\PortfolioModel;
 use App\Models\ServiceModel;
 
 final class ApplicationServices
@@ -63,6 +71,35 @@ final class ApplicationServices
         return new DeleteServiceUseCase(self::serviceRepository());
     }
 
+    public static function listPortfolioUseCase(): ListPortfolioUseCase
+    {
+        return new ListPortfolioUseCase(self::portfolioRepository());
+    }
+
+    public static function getPortfolioUseCase(): GetPortfolioUseCase
+    {
+        return new GetPortfolioUseCase(self::portfolioRepository());
+    }
+
+    public static function createPortfolioUseCase(): CreatePortfolioUseCase
+    {
+        return new CreatePortfolioUseCase(self::portfolioRepository());
+    }
+
+    public static function updatePortfolioUseCase(): UpdatePortfolioUseCase
+    {
+        return new UpdatePortfolioUseCase(self::portfolioRepository());
+    }
+
+    public static function deletePortfolioUseCase(): DeletePortfolioUseCase
+    {
+        return new DeletePortfolioUseCase(
+            self::portfolioRepository(),
+            self::imageRepository(),
+            self::imageStorage()
+        );
+    }
+
     public static function getImagesUseCase(): GetImagesUseCase
     {
         return new GetImagesUseCase(
@@ -98,6 +135,11 @@ final class ApplicationServices
     private static function serviceRepository(): ServiceRepositoryInterface
     {
         return new CodeIgniterServiceRepository(new ServiceModel());
+    }
+
+    private static function portfolioRepository(): PortfolioRepositoryInterface
+    {
+        return new CodeIgniterPortfolioRepository(new PortfolioModel());
     }
 
     private static function imageRepository(): ImageRepositoryInterface

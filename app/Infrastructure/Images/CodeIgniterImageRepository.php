@@ -8,7 +8,10 @@ use App\Models\ImageModel;
 
 final class CodeIgniterImageRepository implements ImageRepositoryInterface
 {
-    public function __construct(private ImageModel $imageModel)
+    public function __construct(
+        private ImageModel $imageModel,
+        private ImageMapper $imageMapper = new ImageMapper()
+    )
     {
     }
 
@@ -20,7 +23,7 @@ final class CodeIgniterImageRepository implements ImageRepositoryInterface
             ->findAll();
 
         return array_map(
-            fn (array $image): Image => Image::fromArray($image),
+            fn (array $image): Image => $this->imageMapper->fromPersistence($image),
             $images
         );
     }
@@ -33,17 +36,16 @@ final class CodeIgniterImageRepository implements ImageRepositoryInterface
             return null;
         }
 
-        return Image::fromArray($image);
+        return $this->imageMapper->fromPersistence($image);
     }
 
     public function create(Image $image): Image
     {
-        $data = $image->toArray();
-        unset($data['id']);
+        $data = $this->imageMapper->toPersistence($image);
 
         $this->imageModel->insert($data);
 
-        return Image::fromArray([
+        return $this->imageMapper->fromPersistence([
             ...$data,
             'id' => $this->imageModel->insertID(),
         ]);

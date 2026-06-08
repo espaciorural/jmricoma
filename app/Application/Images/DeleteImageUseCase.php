@@ -2,6 +2,9 @@
 
 namespace App\Application\Images;
 
+use App\Application\Images\Exception\ImageDeleteFailed;
+use App\Application\Images\Exception\ImageNotFound;
+use App\Application\Images\Output\DeleteImageResult;
 use App\Domain\Images\ImageRepositoryInterface;
 use App\Domain\Images\ImageStorageInterface;
 
@@ -13,47 +16,27 @@ final class DeleteImageUseCase
     ) {
     }
 
-    public function execute(string $id): array
+    public function execute(string $id): DeleteImageResult
     {
         if (! is_numeric($id)) {
             $this->imageStorage->deleteByBasenamePattern($id);
 
-            return [
-                'deleted' => true,
-                'payload' => ['status' => 'success', 'message' => 'Archivos eliminados correctamente'],
-                'notFound' => false,
-                'serverError' => false,
-            ];
+            return DeleteImageResult::deletedByBasename();
         }
 
         $numericId = (int) $id;
         $image = $this->imageRepository->findById($numericId);
 
         if ($image === null) {
-            return [
-                'deleted' => false,
-                'payload' => ['message' => 'No se encontro la imagen con ID: ' . $id],
-                'notFound' => true,
-                'serverError' => false,
-            ];
+            throw ImageNotFound::forId($id);
         }
 
         $this->imageStorage->deleteByRelativePath($image->path());
 
         if (! $this->imageRepository->delete($numericId)) {
-            return [
-                'deleted' => false,
-                'payload' => ['message' => 'No se pudo eliminar la imagen'],
-                'notFound' => false,
-                'serverError' => true,
-            ];
+            throw ImageDeleteFailed::forId($numericId);
         }
 
-        return [
-            'deleted' => true,
-            'payload' => ['message' => 'Imagen eliminada correctamente', 'id' => $numericId],
-            'notFound' => false,
-            'serverError' => false,
-        ];
+        return DeleteImageResult::deletedById($numericId);
     }
 }

@@ -1,17 +1,18 @@
 <?php
 
-namespace App\Application\Services\Input;
+namespace App\Application\Portfolio\Input;
 
-use App\Domain\Services\Service;
+use App\Domain\Portfolio\PortfolioItem;
 
-final class ServiceInput
+final class PortfolioInput
 {
     public function __construct(
         public readonly string $title,
         public readonly ?string $description,
+        public readonly ?string $projectUrl,
         public readonly int $languageId,
         public readonly int $status,
-        public readonly ?int $mainServiceId
+        public readonly ?int $mainPortfolioId
     ) {
     }
 
@@ -22,23 +23,27 @@ final class ServiceInput
             array_key_exists('description', $data) && $data['description'] !== null
                 ? (string) $data['description']
                 : null,
+            array_key_exists('project_url', $data) && $data['project_url'] !== null
+                ? (string) $data['project_url']
+                : null,
             (int) ($data['id_lang'] ?? 0),
             (int) ($data['status'] ?? 1),
-            isset($data['main_service_id']) && $data['main_service_id'] !== ''
-                ? (int) $data['main_service_id']
+            isset($data['main_portfolio_id']) && $data['main_portfolio_id'] !== ''
+                ? (int) $data['main_portfolio_id']
                 : null
         );
     }
 
-    public function toService(): Service
+    public function toPortfolioItem(): PortfolioItem
     {
-        return new Service(
+        return new PortfolioItem(
             null,
             $this->title,
             $this->description,
+            $this->projectUrl,
             $this->languageId,
             $this->status,
-            $this->mainServiceId
+            $this->mainPortfolioId
         );
     }
 }

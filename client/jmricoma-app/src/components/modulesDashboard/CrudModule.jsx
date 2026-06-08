@@ -16,8 +16,8 @@ const Tabs = ({ languages, currentTab, setCurrentTab }) => (
     {languages.map(lang => (
       <button
         key={lang.id}
-        onClick={() => setCurrentTab(lang.id)}
-        className={`py-2 px-4 rounded-t-lg ${currentTab === lang.id ? 'bg-gray-300' : 'bg-gray-100'}`}
+        onClick={() => setCurrentTab(Number(lang.id))}
+        className={`py-2 px-4 rounded-t-lg ${Number(currentTab) === Number(lang.id) ? 'bg-gray-300' : 'bg-gray-100'}`}
       >
         {lang.name}
       </button>
@@ -26,10 +26,12 @@ const Tabs = ({ languages, currentTab, setCurrentTab }) => (
 );
 
 function CrudModule({ resource, mainResourceIdField }) {
+  const isPortfolio = resource === "portfolio";
   const [items, setItems] = useState([]);
   const [newItem, setNewItem] = useState({
     title: "",
     description: "",
+    project_url: "",
     id_lang: 1,
     status: 1,
   });
@@ -45,11 +47,57 @@ function CrudModule({ resource, mainResourceIdField }) {
   const [itemToManageImage, setItemToManageImage] = useState(null);
   const [image, setImage] = useState(null);
 
+  const allLanguages = defaultLanguage ? [defaultLanguage, ...languages] : languages;
+
+  const getRootItemId = (item) => item[mainResourceIdField] || item.id;
+
+  const createEmptyTranslation = (rootItem, languageId) => ({
+    title: "",
+    description: "",
+    id_lang: Number(languageId),
+    status: rootItem.status,
+    [mainResourceIdField]: rootItem.id,
+    isDraft: true,
+  });
+
+  const buildEditingItems = (item) => {
+    const rootItemId = getRootItemId(item);
+    const rootItem = items.find(s => Number(s.id) === Number(rootItemId)) || item;
+    const relatedItems = items.filter(s =>
+      Number(s.id) === Number(rootItemId) ||
+      Number(s[mainResourceIdField]) === Number(rootItemId)
+    );
+
+    return allLanguages.map((language) => {
+      const existingItem = relatedItems.find(s => Number(s.id_lang) === Number(language.id));
+
+      if (existingItem) {
+        return existingItem;
+      }
+
+      if (Number(language.id) === Number(rootItem.id_lang)) {
+        return rootItem;
+      }
+
+      return createEmptyTranslation(rootItem, language.id);
+    });
+  };
+
   const loadItems = useCallback(async () => {
     const data = await getItems(resource);
     
     const itemsWithImage = await Promise.all(data.map(async (item) => {
       try {
+        if (isPortfolio) {
+          const response = await fetch(`/api/get-images?sectionId=${item.id}&type=portfolio_gallery`);
+          const result = await response.json();
+          return {
+            ...item,
+            imageGallery: result.images || [],
+            image: result.images?.[0]?.path || null,
+          };
+        }
+
         const response = await fetch(`/api/check-image/${resource}/${item.id}`);
         const result = await response.json();
         return {
@@ -67,7 +115,7 @@ function CrudModule({ resource, mainResourceIdField }) {
 
     setItems(itemsWithImage);
     console.log("All items loaded:", itemsWithImage);
-  }, [resource]);
+  }, [resource, isPortfolio]);
 
   const loadLanguages = useCallback(async () => {
     const langs = await getLanguages();
@@ -75,7 +123,7 @@ function CrudModule({ resource, mainResourceIdField }) {
     const filteredLangs = langs.filter(lang => Number(lang.id) !== 1);
     setLanguages(filteredLangs);
     setDefaultLanguage(defaultLang);
-    setCurrentTab(defaultLang ? defaultLang.id : 1);
+    setCurrentTab(defaultLang ? Number(defaultLang.id) : 1);
     console.log("Languages loaded (excluding default):", filteredLangs);
   }, []);
 
@@ -106,7 +154,7 @@ function CrudModule({ resource, mainResourceIdField }) {
         });
 
         setItems(newItems);
-        setNewItem({ title: "", description: "", id_lang: 1, status: 1 });
+        setNewItem({ title: "", description: "", project_url: "", id_lang: 1, status: 1 });
         setIsCreateModalOpen(false);
         console.log("Item created:", createdItem);
         await loadItems();
@@ -125,11 +173,24 @@ function CrudModule({ resource, mainResourceIdField }) {
 
       await Promise.all(
         editingItems.map(async (item) => {
-          await updateItem(resource, item.id, item);
+          const itemToSave = { ...item };
+          delete itemToSave.isDraft;
+
+          if (item.isDraft) {
+            if (!itemToSave.title?.trim()) {
+              return;
+            }
+
+            await createItem(resource, itemToSave);
+            return;
+          }
+
+          await updateItem(resource, item.id, itemToSave);
         })
       );
 
       console.log("Items updated:", editingItems);
+      await loadItems();
       setIsEditModalOpen(false);
     } catch (error) {
       console.error("Error updating items:", error);
@@ -204,22 +265,11 @@ function CrudModule({ resource, mainResourceIdField }) {
   };
 
   const openEditModal = async (item) => {
-    const relatedItems = items.filter(s => 
-      s.id === item.id || 
-      s[mainResourceIdField] === item.id || 
-      s.id === item[mainResourceIdField]
-    );
-
-    if (item[mainResourceIdField]) {
-      const mainItem = items.find(s => s.id === item[mainResourceIdField]);
-      if (mainItem && !relatedItems.includes(mainItem)) {
-        relatedItems.push(mainItem);
-      }
-    }
+    const relatedItems = buildEditingItems(item);
 
     console.log('Related items:', relatedItems);
     setEditingItems(relatedItems);
-    setCurrentTab(item.id_lang);
+    setCurrentTab(defaultLanguage ? Number(defaultLanguage.id) : Number(item.id_lang));
     setIsEditModalOpen(true);
   };
 
@@ -243,8 +293,18 @@ function CrudModule({ resource, mainResourceIdField }) {
   };
 
   const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file && ['image/jpeg', 'image/png', 'image/webp'].includes(file.type) && file.size <= 1024 * 1024 * 8) {
+    const selectedFiles = Array.from(e.target.files || []);
+    const validFiles = selectedFiles.filter(
+      (file) => ['image/jpeg', 'image/png', 'image/webp'].includes(file.type) && file.size <= 1024 * 1024 * 8
+    );
+
+    if (isPortfolio) {
+      setImage(validFiles);
+      return;
+    }
+
+    const file = validFiles[0];
+    if (file) {
       setImage(file);
     } else {
       setImage(null);
@@ -255,23 +315,46 @@ function CrudModule({ resource, mainResourceIdField }) {
 
     if (image && itemToManageImage) {
       try {
-        const formData = new FormData();
-        const newFilename = `${resource}_${itemToManageImage.id}.${image.name.split('.').pop()}`;
-        formData.append("file", image);
-        formData.append("newFilename", newFilename);
+        if (isPortfolio) {
+          const files = Array.isArray(image) ? image : [image];
 
-        const response = await fetch('/api/upload-image', {
-          method: 'POST',
-          body: formData,
-        });
+          await Promise.all(files.map(async (file, index) => {
+            const formData = new FormData();
+            const extension = file.name.split('.').pop();
+            const newFilename = `${resource}_${itemToManageImage.id}_${Date.now()}_${index}.${extension}`;
+            formData.append("file", file);
+            formData.append("newFilename", newFilename);
+            formData.append("id_section", itemToManageImage.id);
+            formData.append("type", "portfolio_gallery");
 
-        if (!response.ok) {
-          throw new Error('Error uploading image');
+            const response = await fetch('/api/upload-image', {
+              method: 'POST',
+              body: formData,
+            });
+
+            if (!response.ok) {
+              throw new Error('Error uploading image');
+            }
+          }));
+        } else {
+          const formData = new FormData();
+          const newFilename = `${resource}_${itemToManageImage.id}.${image.name.split('.').pop()}`;
+          formData.append("file", image);
+          formData.append("newFilename", newFilename);
+
+          const response = await fetch('/api/upload-image', {
+            method: 'POST',
+            body: formData,
+          });
+
+          if (!response.ok) {
+            throw new Error('Error uploading image');
+          }
+
+          const uploadedImageURL = URL.createObjectURL(image);
+          itemToManageImage.image = uploadedImageURL;
         }
 
-        // After successful upload, simulate image path assignment
-        const uploadedImageURL = URL.createObjectURL(image);
-        itemToManageImage.image = uploadedImageURL;  // This should be the URL returned by your backend after upload
         await loadItems();
         setIsImageModalOpen(false);
         setImage(null);
@@ -304,6 +387,36 @@ function CrudModule({ resource, mainResourceIdField }) {
       } catch (error) {
         console.error("Error deleting image:", error);
       }
+    }
+  };
+
+  const handleGalleryImageDelete = async (imageId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/delete-image/${imageId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Error deleting gallery image');
+      }
+
+      await loadItems();
+      setItemToManageImage((currentItem) => {
+        if (!currentItem) {
+          return currentItem;
+        }
+
+        return {
+          ...currentItem,
+          imageGallery: (currentItem.imageGallery || []).filter((galleryImage) => galleryImage.id !== imageId),
+        };
+      });
+    } catch (error) {
+      console.error("Error deleting gallery image:", error);
     }
   };
 
@@ -397,6 +510,15 @@ function CrudModule({ resource, mainResourceIdField }) {
             onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
             className="p-2 border border-gray-300 rounded-md"
           ></textarea>
+          {isPortfolio && (
+            <input
+              type="url"
+              placeholder="URL del projecte"
+              value={newItem.project_url || ""}
+              onChange={(e) => setNewItem({ ...newItem, project_url: e.target.value })}
+              className="p-2 border border-gray-300 rounded-md"
+            />
+          )}
           <div className="flex space-x-2">
             <button onClick={handleCreateItem} className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600">Crear</button>
             <button onClick={() => setIsCreateModalOpen(false)} className="bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600">Cancelar</button>
@@ -414,20 +536,20 @@ function CrudModule({ resource, mainResourceIdField }) {
           <>
             {defaultLanguage && (
               <Tabs
-                languages={[defaultLanguage, ...languages]}
+                languages={allLanguages}
                 currentTab={currentTab}
                 setCurrentTab={setCurrentTab}
               />
             )}
-            {editingItems.filter(item => item.id_lang === currentTab).map(item => (
-              <div key={item.id} className="grid grid-cols-1 gap-4">
+            {editingItems.filter(item => Number(item.id_lang) === Number(currentTab)).map(item => (
+              <div key={item.id || `draft-${item.id_lang}`} className="grid grid-cols-1 gap-4">
                 <input
                   type="text"
                   placeholder="Título"
-                  value={item.title}
+                  value={item.title || ""}
                   onChange={(e) => {
                     const updatedItems = editingItems.map(s =>
-                      s.id === item.id ? { ...s, title: e.target.value } : s
+                      Number(s.id_lang) === Number(item.id_lang) ? { ...s, title: e.target.value } : s
                     );
                     setEditingItems(updatedItems);
                   }}
@@ -435,15 +557,29 @@ function CrudModule({ resource, mainResourceIdField }) {
                 />
                 <textarea
                   placeholder="Descripción"
-                  value={item.description}
+                  value={item.description || ""}
                   onChange={(e) => {
                     const updatedItems = editingItems.map(s =>
-                      s.id === item.id ? { ...s, description: e.target.value } : s
+                      Number(s.id_lang) === Number(item.id_lang) ? { ...s, description: e.target.value } : s
                     );
                     setEditingItems(updatedItems);
                   }}
                   className="p-2 border border-gray-300 rounded-md"
                 ></textarea>
+                {isPortfolio && (
+                  <input
+                    type="url"
+                    placeholder="URL del projecte"
+                    value={item.project_url || ""}
+                    onChange={(e) => {
+                      const updatedItems = editingItems.map(s =>
+                        Number(s.id_lang) === Number(item.id_lang) ? { ...s, project_url: e.target.value } : s
+                      );
+                      setEditingItems(updatedItems);
+                    }}
+                    className="p-2 border border-gray-300 rounded-md"
+                  />
+                )}
               </div>
             ))}
             <div className="flex space-x-2 mt-4">
@@ -476,7 +612,40 @@ function CrudModule({ resource, mainResourceIdField }) {
         {itemToManageImage && (
           <>
           {console.log("itemToManageImage", itemToManageImage)}
-            {itemToManageImage.image ? (
+            {isPortfolio ? (
+              <div className="grid grid-cols-1 gap-4">
+                {(itemToManageImage.imageGallery || []).length > 0 && (
+                  <div className="grid grid-cols-2 gap-3">
+                    {itemToManageImage.imageGallery.map((galleryImage) => (
+                      <div key={galleryImage.id} className="border border-gray-200 rounded-md p-2">
+                        <img src={galleryImage.path} alt={itemToManageImage.title} className="h-28 w-full object-cover mb-2 rounded" />
+                        <button
+                          onClick={() => handleGalleryImageDelete(galleryImage.id)}
+                          className="bg-red-500 text-white py-1 px-2 rounded-md hover:bg-red-600 flex items-center text-sm"
+                        >
+                          <TrashIcon className="h-4 w-4 mr-1" />
+                          Eliminar
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <input
+                  type="file"
+                  multiple
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleImageUpload}
+                  className="p-2 border border-gray-300 rounded-md"
+                />
+                <div className="flex space-x-2">
+                  <button onClick={handleImageSave} className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 flex items-center">
+                    <PhotoIcon className="h-5 w-5 mr-2" />
+                    Guardar imatges
+                  </button>
+                  <button onClick={() => setIsImageModalOpen(false)} className="bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600">Cancelar</button>
+                </div>
+              </div>
+            ) : itemToManageImage.image ? (
               <div className="grid grid-cols-1 gap-4">
                 <div className="mb-4">
                   <img src={itemToManageImage.image} alt={itemToManageImage.title} className="h-32 w-32 object-cover mb-2" />

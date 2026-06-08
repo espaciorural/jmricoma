@@ -38,4 +38,14 @@ $routes->group('', ['namespace' => 'App\Controllers'], function($routes) {
     $routes->options('api/services/update/(:segment)', 'ServiceController::optionsHandler/$1');
     $routes->delete('api/services/delete/(:segment)', 'ServiceController::delete/$1');
     $routes->options('api/services/delete/(:segment)', 'ServiceController::optionsHandler/$1');
+
+    // Rutas para PortfolioController
+    $routes->get('api/portfolio', 'PortfolioController::index');
+    $routes->get('api/portfolio/(:segment)', 'PortfolioController::show/$1');
+    $routes->post('api/portfolio/create', 'PortfolioController::create');
+    $routes->options('api/portfolio/create', 'PortfolioController::optionsHandler');
+    $routes->put('api/portfolio/update/(:segment)', 'PortfolioController::update/$1');
+    $routes->options('api/portfolio/update/(:segment)', 'PortfolioController::optionsHandler/$1');
+    $routes->delete('api/portfolio/delete/(:segment)', 'PortfolioController::delete/$1');
+    $routes->options('api/portfolio/delete/(:segment)', 'PortfolioController::optionsHandler/$1');
 });

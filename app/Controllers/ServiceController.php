@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Application\Services\Input\ServiceInput;
+use App\Domain\Shared\Exception\InvalidDomainData;
 use App\Infrastructure\DependencyInjection\ApplicationServices;
 use App\Infrastructure\Http\Requests\ServiceRequest;
 use CodeIgniter\RESTful\ResourceController;
@@ -13,17 +14,20 @@ class ServiceController extends ResourceController
 
     public function index()
     {
-        return $this->respond(
+        $services = array_map(
+            fn ($service): array => $service->toArray(),
             ApplicationServices::listServicesUseCase()->execute()
         );
+
+        return $this->respond($services);
     }
 
     public function show($id = null)
     {
-        $data = ApplicationServices::getServiceUseCase()->execute((int) $id);
+        $service = ApplicationServices::getServiceUseCase()->execute((int) $id);
 
-        if ($data) {
-            return $this->respond($data);
+        if ($service) {
+            return $this->respond($service->toArray());
         }
 
         return $this->failNotFound('Service not found');
@@ -37,10 +41,13 @@ class ServiceController extends ResourceController
             return $this->failValidationErrors($this->validator->getErrors());
         }
 
-        return $this->respondCreated(
-            ApplicationServices::createServiceUseCase()->execute(ServiceInput::fromArray($data)),
-            'Service created'
-        );
+        try {
+            $service = ApplicationServices::createServiceUseCase()->execute(ServiceInput::fromArray($data));
+        } catch (InvalidDomainData $exception) {
+            return $this->failValidationErrors($exception->getMessage());
+        }
+
+        return $this->respondCreated($service->toArray(), 'Service created');
     }
 
     public function update($id = null)
@@ -51,7 +58,13 @@ class ServiceController extends ResourceController
             return $this->failValidationErrors($this->validator->getErrors());
         }
 
-        if (ApplicationServices::updateServiceUseCase()->execute((int) $id, ServiceInput::fromArray($data))) {
+        try {
+            $updated = ApplicationServices::updateServiceUseCase()->execute((int) $id, ServiceInput::fromArray($data));
+        } catch (InvalidDomainData $exception) {
+            return $this->failValidationErrors($exception->getMessage());
+        }
+
+        if ($updated) {
             return $this->respond(['status' => 'success', 'message' => 'Service updated']);
         }
 

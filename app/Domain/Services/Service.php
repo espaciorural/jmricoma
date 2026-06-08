@@ -2,6 +2,8 @@
 
 namespace App\Domain\Services;
 
+use App\Domain\Shared\Exception\InvalidDomainData;
+
 final class Service
 {
     public function __construct(
@@ -12,38 +14,60 @@ final class Service
         private int $status,
         private ?int $mainServiceId
     ) {
+        $this->title = trim($title);
+        $this->assertValid();
     }
 
-    public static function fromArray(array $data): self
+    private function assertValid(): void
     {
-        return new self(
-            isset($data['id']) ? (int) $data['id'] : null,
-            (string) ($data['title'] ?? ''),
-            array_key_exists('description', $data) && $data['description'] !== null
-                ? (string) $data['description']
-                : null,
-            (int) ($data['id_lang'] ?? 0),
-            (int) ($data['status'] ?? 1),
-            isset($data['main_service_id']) && $data['main_service_id'] !== ''
-                ? (int) $data['main_service_id']
-                : null
-        );
-    }
+        if ($this->id !== null && $this->id < 1) {
+            throw new InvalidDomainData('Service id must be positive.');
+        }
 
-    public function toArray(): array
-    {
-        return [
-            'id' => $this->id,
-            'title' => $this->title,
-            'description' => $this->description,
-            'id_lang' => $this->languageId,
-            'status' => $this->status,
-            'main_service_id' => $this->mainServiceId,
-        ];
+        if ($this->title === '') {
+            throw new InvalidDomainData('Service title cannot be empty.');
+        }
+
+        if ($this->languageId < 1) {
+            throw new InvalidDomainData('Service language id must be positive.');
+        }
+
+        if (! in_array($this->status, [0, 1], true)) {
+            throw new InvalidDomainData('Service status must be 0 or 1.');
+        }
+
+        if ($this->mainServiceId !== null && $this->mainServiceId < 1) {
+            throw new InvalidDomainData('Main service id must be positive.');
+        }
     }
 
     public function id(): ?int
     {
         return $this->id;
+    }
+
+    public function title(): string
+    {
+        return $this->title;
+    }
+
+    public function description(): ?string
+    {
+        return $this->description;
+    }
+
+    public function languageId(): int
+    {
+        return $this->languageId;
+    }
+
+    public function status(): int
+    {
+        return $this->status;
+    }
+
+    public function mainServiceId(): ?int
+    {
+        return $this->mainServiceId;
     }
 }

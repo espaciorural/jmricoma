@@ -2,7 +2,10 @@
 
 namespace App\Controllers;
 
+use App\Application\Images\Exception\ImageDeleteFailed;
+use App\Application\Images\Exception\ImageNotFound;
 use App\Application\Images\Input\UploadImageInput;
+use App\Domain\Shared\Exception\InvalidDomainData;
 use App\Infrastructure\DependencyInjection\ApplicationServices;
 use App\Infrastructure\Http\Requests\UploadImageRequest;
 use CodeIgniter\API\ResponseTrait;
@@ -43,16 +46,27 @@ class ImageController extends BaseController
                     'message' => 'Archivo invalido o error de carga',
                     'detail' => $exception->getMessage(),
                 ]);
+        } catch (InvalidDomainData $exception) {
+            return $this->response
+                ->setStatusCode(400)
+                ->setJSON([
+                    'status' => 'error',
+                    'message' => 'Datos de imagen invalidos',
+                    'detail' => $exception->getMessage(),
+                ]);
         }
 
-        return $this->response->setJSON($result);
+        return $this->response->setJSON($result->toArray());
     }
 
     public function getImages()
     {
-        $images = ApplicationServices::getImagesUseCase()->execute(
-            (int) $this->request->getGet('sectionId'),
-            (string) $this->request->getGet('type')
+        $images = array_map(
+            fn ($image): array => $image->toArray(),
+            ApplicationServices::getImagesUseCase()->execute(
+                (int) $this->request->getGet('sectionId'),
+                (string) $this->request->getGet('type')
+            )
         );
 
         if (! empty($images)) {
@@ -64,27 +78,25 @@ class ImageController extends BaseController
 
     public function deleteImage($id)
     {
-        $result = ApplicationServices::deleteImageUseCase()->execute((string) $id);
-
-        if ($result['notFound']) {
-            return $this->failNotFound($result['payload']['message']);
-        }
-
-        if ($result['serverError']) {
-            return $this->failServerError($result['payload']['message']);
+        try {
+            $result = ApplicationServices::deleteImageUseCase()->execute((string) $id);
+        } catch (ImageNotFound $exception) {
+            return $this->failNotFound($exception->getMessage());
+        } catch (ImageDeleteFailed $exception) {
+            return $this->failServerError($exception->getMessage());
         }
 
         if (is_numeric($id)) {
-            return $this->respondDeleted($result['payload']);
+            return $this->respondDeleted($result->payload());
         }
 
-        return $this->response->setJSON($result['payload']);
+        return $this->response->setJSON($result->payload());
     }
 
     public function checkImage($resource, $id)
     {
         return $this->response->setJSON(
-            ApplicationServices::checkImageUseCase()->execute((string) $resource, (string) $id)
+            ApplicationServices::checkImageUseCase()->execute((string) $resource, (string) $id)->toArray()
         );
     }
 }

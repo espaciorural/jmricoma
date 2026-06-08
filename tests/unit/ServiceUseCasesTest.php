@@ -15,38 +15,24 @@ final class ServiceUseCasesTest extends TestCase
     public function testItListsServices(): void
     {
         $repository = new InMemoryServiceRepository([
-            Service::fromArray([
-                'id' => 1,
-                'title' => 'Web development',
-                'description' => 'Custom websites',
-                'id_lang' => 1,
-                'status' => 1,
-                'main_service_id' => null,
-            ]),
+            new Service(1, 'Web development', 'Custom websites', 1, 1, null),
         ]);
 
         $services = (new ListServicesUseCase($repository))->execute();
 
-        $this->assertSame('Web development', $services[0]['title']);
-        $this->assertSame(1, $services[0]['id_lang']);
+        $this->assertSame('Web development', $services[0]->toArray()['title']);
+        $this->assertSame(1, $services[0]->toArray()['id_lang']);
     }
 
     public function testItGetsServiceById(): void
     {
         $repository = new InMemoryServiceRepository([
-            Service::fromArray([
-                'id' => 2,
-                'title' => 'SEO',
-                'description' => null,
-                'id_lang' => 1,
-                'status' => 1,
-                'main_service_id' => null,
-            ]),
+            new Service(2, 'SEO', null, 1, 1, null),
         ]);
 
         $service = (new GetServiceUseCase($repository))->execute(2);
 
-        $this->assertSame('SEO', $service['title']);
+        $this->assertSame('SEO', $service->toArray()['title']);
     }
 
     public function testItCreatesService(): void
@@ -61,21 +47,14 @@ final class ServiceUseCasesTest extends TestCase
             'main_service_id' => null,
         ]));
 
-        $this->assertSame(1, $service['id']);
-        $this->assertSame('Maintenance', $service['title']);
+        $this->assertSame(1, $service->toArray()['id']);
+        $this->assertSame('Maintenance', $service->toArray()['title']);
     }
 
     public function testItUpdatesService(): void
     {
         $repository = new InMemoryServiceRepository([
-            Service::fromArray([
-                'id' => 1,
-                'title' => 'Old title',
-                'description' => null,
-                'id_lang' => 1,
-                'status' => 1,
-                'main_service_id' => null,
-            ]),
+            new Service(1, 'Old title', null, 1, 1, null),
         ]);
 
         $updated = (new UpdateServiceUseCase($repository))->execute(1, ServiceInput::fromArray([
@@ -89,20 +68,13 @@ final class ServiceUseCasesTest extends TestCase
         $service = (new GetServiceUseCase($repository))->execute(1);
 
         $this->assertTrue($updated);
-        $this->assertSame('New title', $service['title']);
+        $this->assertSame('New title', $service->toArray()['title']);
     }
 
     public function testItDeletesService(): void
     {
         $repository = new InMemoryServiceRepository([
-            Service::fromArray([
-                'id' => 1,
-                'title' => 'To delete',
-                'description' => null,
-                'id_lang' => 1,
-                'status' => 1,
-                'main_service_id' => null,
-            ]),
+            new Service(1, 'To delete', null, 1, 1, null),
         ]);
 
         $deleted = (new DeleteServiceUseCase($repository))->execute(1);
@@ -139,10 +111,14 @@ final class InMemoryServiceRepository implements ServiceRepositoryInterface
     public function create(Service $service): Service
     {
         $id = count($this->services) + 1;
-        $created = Service::fromArray([
-            ...$service->toArray(),
-            'id' => $id,
-        ]);
+        $created = new Service(
+            $id,
+            $service->title(),
+            $service->description(),
+            $service->languageId(),
+            $service->status(),
+            $service->mainServiceId()
+        );
         $this->services[$id] = $created;
 
         return $created;
@@ -154,10 +130,14 @@ final class InMemoryServiceRepository implements ServiceRepositoryInterface
             return false;
         }
 
-        $this->services[$id] = Service::fromArray([
-            ...$service->toArray(),
-            'id' => $id,
-        ]);
+        $this->services[$id] = new Service(
+            $id,
+            $service->title(),
+            $service->description(),
+            $service->languageId(),
+            $service->status(),
+            $service->mainServiceId()
+        );
 
         return true;
     }

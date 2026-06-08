@@ -8,14 +8,17 @@ use App\Models\ServiceModel;
 
 final class CodeIgniterServiceRepository implements ServiceRepositoryInterface
 {
-    public function __construct(private ServiceModel $serviceModel)
+    public function __construct(
+        private ServiceModel $serviceModel,
+        private ServiceMapper $serviceMapper = new ServiceMapper()
+    )
     {
     }
 
     public function findAll(): array
     {
         return array_map(
-            fn (array $service): Service => Service::fromArray($service),
+            fn (array $service): Service => $this->serviceMapper->fromPersistence($service),
             $this->serviceModel->findAll()
         );
     }
@@ -28,15 +31,15 @@ final class CodeIgniterServiceRepository implements ServiceRepositoryInterface
             return null;
         }
 
-        return Service::fromArray($service);
+        return $this->serviceMapper->fromPersistence($service);
     }
 
     public function create(Service $service): Service
     {
-        $data = $this->withoutNullId($service->toArray());
+        $data = $this->serviceMapper->toPersistence($service);
         $this->serviceModel->insert($data);
 
-        return Service::fromArray([
+        return $this->serviceMapper->fromPersistence([
             ...$data,
             'id' => $this->serviceModel->insertID(),
         ]);
@@ -44,18 +47,11 @@ final class CodeIgniterServiceRepository implements ServiceRepositoryInterface
 
     public function update(int $id, Service $service): bool
     {
-        return (bool) $this->serviceModel->update($id, $this->withoutNullId($service->toArray()));
+        return (bool) $this->serviceModel->update($id, $this->serviceMapper->toPersistence($service));
     }
 
     public function delete(int $id): bool
     {
         return (bool) $this->serviceModel->delete($id);
-    }
-
-    private function withoutNullId(array $data): array
-    {
-        unset($data['id']);
-
-        return $data;
     }
 }

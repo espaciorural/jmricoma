@@ -2,6 +2,8 @@
 
 namespace App\Domain\Images;
 
+use App\Domain\Shared\Exception\InvalidDomainData;
+
 final class Image
 {
     public function __construct(
@@ -10,26 +12,28 @@ final class Image
         private int $sectionId,
         private string $type
     ) {
+        $this->path = trim($path);
+        $this->type = trim($type);
+        $this->assertValid();
     }
 
-    public static function fromArray(array $data): self
+    private function assertValid(): void
     {
-        return new self(
-            isset($data['id']) ? (int) $data['id'] : null,
-            (string) ($data['path'] ?? ''),
-            (int) ($data['id_section'] ?? 0),
-            (string) ($data['type'] ?? '')
-        );
-    }
+        if ($this->id !== null && $this->id < 1) {
+            throw new InvalidDomainData('Image id must be positive.');
+        }
 
-    public function toArray(): array
-    {
-        return [
-            'id' => $this->id,
-            'path' => $this->path,
-            'id_section' => $this->sectionId,
-            'type' => $this->type,
-        ];
+        if ($this->path === '') {
+            throw new InvalidDomainData('Image path cannot be empty.');
+        }
+
+        if ($this->sectionId < 1) {
+            throw new InvalidDomainData('Image section id must be positive.');
+        }
+
+        if ($this->type === '') {
+            throw new InvalidDomainData('Image type cannot be empty.');
+        }
     }
 
     public function id(): ?int
@@ -40,5 +44,15 @@ final class Image
     public function path(): string
     {
         return $this->path;
+    }
+
+    public function sectionId(): int
+    {
+        return $this->sectionId;
+    }
+
+    public function type(): string
+    {
+        return $this->type;
     }
 }

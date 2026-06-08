@@ -2,6 +2,8 @@
 
 use App\Application\Images\CheckImageUseCase;
 use App\Application\Images\DeleteImageUseCase;
+use App\Application\Images\Exception\ImageDeleteFailed;
+use App\Application\Images\Exception\ImageNotFound;
 use App\Application\Images\GetImagesUseCase;
 use App\Application\Images\Input\UploadImageInput;
 use App\Application\Images\UploadImageUseCase;
@@ -16,12 +18,7 @@ final class ImageUseCasesTest extends TestCase
     public function testItGetsImagesWithPublicUrls(): void
     {
         $repository = new InMemoryImageRepository([
-            Image::fromArray([
-                'id' => 1,
-                'path' => 'uploads/header.webp',
-                'id_section' => 1,
-                'type' => 'header',
-            ]),
+            new Image(1, 'uploads/header.webp', 1, 'header'),
         ]);
 
         $images = (new GetImagesUseCase(
@@ -29,8 +26,8 @@ final class ImageUseCasesTest extends TestCase
             new PrefixPublicUrlGenerator('https://jmricoma.com/')
         ))->execute(1, 'header');
 
-        $this->assertSame(1, $images[0]['id']);
-        $this->assertSame('https://jmricoma.com/uploads/header.webp', $images[0]['path']);
+        $this->assertSame(1, $images[0]->toArray()['id']);
+        $this->assertSame('https://jmricoma.com/uploads/header.webp', $images[0]->toArray()['path']);
     }
 
     public function testItChecksImageByResourceAndId(): void
@@ -40,27 +37,42 @@ final class ImageUseCasesTest extends TestCase
             new PrefixPublicUrlGenerator('https://jmricoma.com/')
         ))->execute('services', '34');
 
-        $this->assertTrue($result['exists']);
-        $this->assertSame('https://jmricoma.com/uploads/services_34.webp', $result['url']);
+        $this->assertTrue($result->exists);
+        $this->assertSame('https://jmricoma.com/uploads/services_34.webp', $result->url);
     }
 
     public function testItDeletesImageByDatabaseId(): void
     {
         $repository = new InMemoryImageRepository([
-            Image::fromArray([
-                'id' => 1,
-                'path' => 'uploads/header.webp',
-                'id_section' => 1,
-                'type' => 'header',
-            ]),
+            new Image(1, 'uploads/header.webp', 1, 'header'),
         ]);
         $storage = new FakeImageStorage();
 
         $result = (new DeleteImageUseCase($repository, $storage))->execute('1');
 
-        $this->assertTrue($result['deleted']);
+        $this->assertTrue($result->deleted);
         $this->assertSame('uploads/header.webp', $storage->deletedRelativePath);
         $this->assertNull($repository->findById(1));
+    }
+
+    public function testItThrowsWhenDeletingMissingImage(): void
+    {
+        $this->expectException(ImageNotFound::class);
+        $this->expectExceptionMessage('No se encontro la imagen con ID: 99');
+
+        (new DeleteImageUseCase(new InMemoryImageRepository(), new FakeImageStorage()))->execute('99');
+    }
+
+    public function testItThrowsWhenRepositoryCannotDeleteImage(): void
+    {
+        $this->expectException(ImageDeleteFailed::class);
+        $this->expectExceptionMessage('No se pudo eliminar la imagen con ID: 1');
+
+        $repository = new FailingDeleteImageRepository([
+            new Image(1, 'uploads/header.webp', 1, 'header'),
+        ]);
+
+        (new DeleteImageUseCase($repository, new FakeImageStorage()))->execute('1');
     }
 
     public function testItUploadsImageAndStoresMetadataWhenSectionIsProvided(): void
@@ -74,12 +86,12 @@ final class ImageUseCasesTest extends TestCase
 
         $images = $repository->findBySectionAndType(1, 'services');
 
-        $this->assertSame('success', $result['status']);
+        $this->assertTrue($result->metadataStored);
         $this->assertSame('uploads/services_1.webp', $images[0]->path());
     }
 }
 
-final class InMemoryImageRepository implements ImageRepositoryInterface
+class InMemoryImageRepository implements ImageRepositoryInterface
 {
     /**
      * @var array<int, Image>
@@ -97,8 +109,8 @@ final class InMemoryImageRepository implements ImageRepositoryInterface
     {
         return array_values(array_filter(
             $this->images,
-            fn (Image $image): bool => $image->toArray()['id_section'] === $sectionId
-                && $image->toArray()['type'] === $type
+            fn (Image $image): bool => $image->sectionId() === $sectionId
+                && $image->type() === $type
         ));
     }
 
@@ -110,10 +122,7 @@ final class InMemoryImageRepository implements ImageRepositoryInterface
     public function create(Image $image): Image
     {
         $id = count($this->images) + 1;
-        $created = Image::fromArray([
-            ...$image->toArray(),
-            'id' => $id,
-        ]);
+        $created = new Image($id, $image->path(), $image->sectionId(), $image->type());
         $this->images[$id] = $created;
 
         return $created;
@@ -128,6 +137,14 @@ final class InMemoryImageRepository implements ImageRepositoryInterface
         unset($this->images[$id]);
 
         return true;
+    }
+}
+
+final class FailingDeleteImageRepository extends InMemoryImageRepository
+{
+    public function delete(int $id): bool
+    {
+        return false;
     }
 }
 

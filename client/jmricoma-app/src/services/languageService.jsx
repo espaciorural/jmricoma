@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://jmricoma/api/languages';
+const API_URL = '/api/languages';
 
 const getLanguages = async () => {
   try {

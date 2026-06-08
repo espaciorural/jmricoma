@@ -60,7 +60,7 @@ describe('TitleSubtitleModule', () => {
     // Aquí puedes añadir aserciones adicionales para verificar el resultado esperado,
     // como asegurarte de que se llamó a axios.put con los argumentos esperados.
     expect(axios.put).toHaveBeenCalledWith(
-      expect.stringContaining(`http://jmricoma/api/literal/update/section/1`), // URL esperada
+      expect.stringContaining(`/api/literal/update/section/1`), // URL esperada
       expect.objectContaining({
         lang: 'ES',
         text: expect.any(String), // Aquí puedes ser más específico, como 'Nuevo Título'

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://jmricoma/api';
+const API_URL = '/api';
 
 const getItems = async (resource) => {
   try {

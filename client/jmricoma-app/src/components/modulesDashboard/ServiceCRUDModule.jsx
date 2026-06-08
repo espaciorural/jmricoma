@@ -55,7 +55,7 @@ function ServiceCRUDModule() {
     
     const servicesWithImage = await Promise.all(data.map(async (service) => {
       try {
-        const response = await fetch(`http://jmricoma/api/check-image/${service.id}`);
+        const response = await fetch(`/api/check-image/${service.id}`);
         const result = await response.json();
         return {
           ...service,
@@ -257,7 +257,7 @@ function ServiceCRUDModule() {
         formData.append("file", image);
         formData.append("newFilename", newFilename);
 
-        const response = await fetch('http://jmricoma/api/upload-image', {
+        const response = await fetch('/api/upload-image', {
           method: 'POST',
           body: formData,
         });
@@ -283,7 +283,7 @@ function ServiceCRUDModule() {
     if (serviceToManageImage) {
         const token = localStorage.getItem('token');
         try {
-          const response = await fetch(`http://jmricoma/api/delete-image/service_${serviceToManageImage.id}`, {
+          const response = await fetch(`/api/delete-image/service_${serviceToManageImage.id}`, {
             method: 'DELETE',
             headers: {
               'Authorization': `Bearer ${token}`

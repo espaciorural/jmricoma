@@ -16,7 +16,7 @@ function LoginForm() {
     event.preventDefault();
     setMessage(""); // Limpia mensajes anteriores
     try {
-      const response = await axios.post("http://jmricoma/auth/login", {
+      const response = await axios.post("/auth/login", {
         username,
         password,
       });

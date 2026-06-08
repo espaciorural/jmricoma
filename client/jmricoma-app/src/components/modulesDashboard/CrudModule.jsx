@@ -50,7 +50,7 @@ function CrudModule({ resource, mainResourceIdField }) {
     
     const itemsWithImage = await Promise.all(data.map(async (item) => {
       try {
-        const response = await fetch(`http://jmricoma/api/check-image/${resource}/${item.id}`);
+        const response = await fetch(`/api/check-image/${resource}/${item.id}`);
         const result = await response.json();
         return {
           ...item,
@@ -258,7 +258,7 @@ function CrudModule({ resource, mainResourceIdField }) {
         formData.append("file", image);
         formData.append("newFilename", newFilename);
 
-        const response = await fetch('http://jmricoma/api/upload-image', {
+        const response = await fetch('/api/upload-image', {
           method: 'POST',
           body: formData,
         });
@@ -284,7 +284,7 @@ function CrudModule({ resource, mainResourceIdField }) {
     if (itemToManageImage) {
         const token = localStorage.getItem('token');
         try {
-          const response = await fetch(`http://jmricoma/api/delete-image/${resource}_${itemToManageImage.id}`, {
+          const response = await fetch(`/api/delete-image/${resource}_${itemToManageImage.id}`, {
             method: 'DELETE',
             headers: {
               'Authorization': `Bearer ${token}`

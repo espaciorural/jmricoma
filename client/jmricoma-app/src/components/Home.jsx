@@ -87,7 +87,10 @@ const Home = ({ idSection, idLang }) => {
   };
 
   return (
-    <div className={`content ${backgroundImage ? 'background-image' : ''}`}>
+    <div
+      className={`content ${backgroundImage ? 'background-image' : ''}`}
+      style={{ '--profile-image': "url('/uploads/josep.webp')" }}
+    >
       <div className="content-wrapper">
         <Slide direction="down" duration={1000} triggerOnce>
           <h1>Josep M. Ricomà</h1>

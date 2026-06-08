@@ -8,7 +8,7 @@ function Home() {
   const [idiomas, setIdiomas] = useState(null); // Inicializa como null para verificar fácilmente si está cargado
 
   useEffect(() => {
-    axios.get(`http://jmricoma/api/languages`, { withCredentials: true })
+    axios.get(`/api/languages`, { withCredentials: true })
       .then(response => {
         // Asegúrate de que la ruta de acceso a 'languages' sea correcta según tu estructura de respuesta
         const codigos = response.data.languages.map(lang => lang.code);

@@ -13,7 +13,7 @@ function ImageUploaderModule({
   const [images, setImages] = useState([]);
   useEffect(() => {
     axios
-      .get(`http://jmricoma/api/get-images?sectionId=${sectionId}&type=${type}`)
+      .get(`/api/get-images?sectionId=${sectionId}&type=${type}`)
       .then((response) => {
         if (response.data && response.data.images) {
           setImages(response.data.images); // Actualiza el estado con las imágenes obtenidas
@@ -47,7 +47,7 @@ function ImageUploaderModule({
           formData.append("id_section", sectionId); // Añade section_id al FormData
           formData.append("type", type);
 
-          fetch(`http://jmricoma/api/upload-image`, {
+          fetch(`/api/upload-image`, {
             method: "POST",
             body: formData,
             // Añade cualquier encabezado adicional aquí, si es necesario
@@ -59,7 +59,7 @@ function ImageUploaderModule({
                 // Considera solicitar nuevamente la lista de imágenes para actualizar el estado
                 axios
                   .get(
-                    `http://jmricoma/api/get-images?sectionId=${sectionId}&type=${type}`, { withCredentials: true }
+                    `/api/get-images?sectionId=${sectionId}&type=${type}`, { withCredentials: true }
                   )
                   .then((response) => {
                     if (response.data && response.data.images) {
@@ -98,7 +98,7 @@ function ImageUploaderModule({
 const handleDelete = async (imageId) => {
   const token = localStorage.getItem('token');
   try {
-    const response = await fetch(`http://jmricoma/api/delete-image/${imageId}`, {
+    const response = await fetch(`/api/delete-image/${imageId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`

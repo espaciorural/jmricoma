@@ -83,7 +83,7 @@ h3 {
   border: 3px solid #06032e;
   border-radius: 50%;
   box-sizing: border-box;
-  background-image: url('http://jmricoma/uploads/josep.webp');
+  background-image: var(--profile-image);
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

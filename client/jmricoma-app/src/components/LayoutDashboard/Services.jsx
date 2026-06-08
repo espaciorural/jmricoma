@@ -11,7 +11,7 @@ function Services() {
 
   useEffect(() => {
     axios
-      .get(`http://jmricoma/api/languages`, { withCredentials: true })
+      .get(`/api/languages`, { withCredentials: true })
       .then((response) => {
         setIdiomas(response.data.languages);
       })

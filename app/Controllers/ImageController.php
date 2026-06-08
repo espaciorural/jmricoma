@@ -67,7 +67,7 @@ class ImageController extends BaseController
                 // Asegúrate de incluir el 'id' de cada imagen en la respuesta
                 return [
                     'id' => $img['id'],
-                    'path' => "http://jmricoma/" . $img['path']
+                    'path' => base_url($img['path'])
                 ];
             }, $images);
 

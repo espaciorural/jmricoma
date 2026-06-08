@@ -1,3 +1,3 @@
-const API_URL = 'http://jmricoma/api';
+const API_URL = '/api';
 
 export default API_URL;

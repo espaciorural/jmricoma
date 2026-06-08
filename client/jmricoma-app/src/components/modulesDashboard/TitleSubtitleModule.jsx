@@ -105,7 +105,7 @@ function TitleSubtitleModule({ sectionId, idiomas, fields = ["title", "subtitle"
     }
 
     axios
-      .get(`http://jmricoma/api/literal/section/${sectionId}`, {
+      .get(`/api/literal/section/${sectionId}`, {
         withCredentials: true,
       })
       .then((response) => {
@@ -149,7 +149,7 @@ function TitleSubtitleModule({ sectionId, idiomas, fields = ["title", "subtitle"
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const apiUrl = `http://jmricoma/api/literal/update/section/${sectionId}`;
+    const apiUrl = `/api/literal/update/section/${sectionId}`;
     const dataToSend = [];
   
     idiomas.forEach((lang) => {

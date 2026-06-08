@@ -44,7 +44,7 @@ const Services = ({ idSection, idLang }) => {
       const servicesWithImages = await Promise.all(
         filteredServices.map(async (service) => {
           try {
-            const response = await fetch(`http://jmricoma/api/check-image/services/${service.id}`);
+            const response = await fetch(`/api/check-image/services/${service.id}`);
             const result = await response.json();
             return {
               ...service,

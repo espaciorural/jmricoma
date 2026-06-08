@@ -31,7 +31,7 @@ function Home() {
         <ImageUploaderModule
           onFileUploaded={(files) => { console.log(files); }}
           maxFiles={1} 
-          maxSize={1024 * 1024 * 2} // 2MB máximo por archivo
+                    maxSize={1024 * 1024 * 8} // 8MB maximo por archivo
           sectionId={1}
           type={"header"}
         />

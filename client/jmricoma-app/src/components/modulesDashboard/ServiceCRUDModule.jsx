@@ -244,8 +244,10 @@ function ServiceCRUDModule() {
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
-    if (file) {
+    if (file && ['image/jpeg', 'image/png', 'image/webp'].includes(file.type) && file.size <= 1024 * 1024 * 8) {
       setImage(file);
+    } else {
+      setImage(null);
     }
   };
 
@@ -488,6 +490,7 @@ function ServiceCRUDModule() {
               <div className="grid grid-cols-1 gap-4">
                 <input
                   type="file"
+                  accept="image/jpeg,image/png,image/webp"
                   onChange={handleImageUpload}
                   className="p-2 border border-gray-300 rounded-md"
                 />

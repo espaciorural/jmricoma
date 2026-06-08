@@ -2,12 +2,8 @@
 
 namespace App\Controllers;
 
-use App\Application\Auth\LoginUserUseCase;
-use App\Infrastructure\Auth\CodeIgniterAccessRepository;
-use App\Infrastructure\Auth\JwtTokenGenerator;
-use App\Infrastructure\Auth\NativePasswordVerifier;
-use App\Models\AccessModel;
 use CodeIgniter\Controller;
+use App\Infrastructure\DependencyInjection\ApplicationServices;
 use RuntimeException;
 
 class Auth extends Controller
@@ -25,7 +21,7 @@ class Auth extends Controller
         $password = $json->password ?? '';
 
         try {
-            $result = $this->loginUserUseCase()->execute($username, $password);
+            $result = ApplicationServices::loginUserUseCase()->execute($username, $password);
         } catch (RuntimeException $exception) {
             log_message('error', $exception->getMessage());
             return $this->response->setJSON(['error' => 'JWT configuration error.']);
@@ -44,14 +40,5 @@ class Auth extends Controller
     public function options()
     {
         return;
-    }
-
-    private function loginUserUseCase(): LoginUserUseCase
-    {
-        return new LoginUserUseCase(
-            new CodeIgniterAccessRepository(new AccessModel()),
-            new NativePasswordVerifier(),
-            new JwtTokenGenerator(env('JWT_SECRET_KEY'))
-        );
     }
 }

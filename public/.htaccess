@@ -1,6 +1,9 @@
 # Disable directory browsing
 Options -Indexes
 
+php_value upload_max_filesize 8M
+php_value post_max_size 10M
+
 # ----------------------------------------------------------------------
 # Rewrite engine
 # ----------------------------------------------------------------------

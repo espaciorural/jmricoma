@@ -28,8 +28,15 @@ function ImageUploaderModule({
     useDropzone({
       onDrop: (acceptedFiles) => {
         const filteredFiles = acceptedFiles.filter(
-          (file) => file.type === "image/jpeg" || file.type === "image/png"
+          (file) =>
+            file.type === "image/jpeg" ||
+            file.type === "image/png" ||
+            file.type === "image/webp"
         );
+
+        if (filteredFiles.length === 0) {
+          return;
+        }
 
         const filesWithPreviews = filteredFiles.map((file) =>
           Object.assign(file, {
@@ -41,7 +48,7 @@ function ImageUploaderModule({
 
         // Sube el primer archivo si `maxFiles` es 1, de lo contrario, ajusta para subir múltiples archivos
         if (maxFiles === 1) {
-          const file = acceptedFiles[0]; // Asume que solo subes un archivo
+          const file = filteredFiles[0]; // Asume que solo subes un archivo
           const formData = new FormData();
           formData.append("file", file); // "file" es la clave esperada por tu API
           formData.append("id_section", sectionId); // Añade section_id al FormData
@@ -79,6 +86,11 @@ function ImageUploaderModule({
               // Aquí puedes manejar el error, por ejemplo, mostrar un mensaje de error
             });
         }
+      },
+      accept: {
+        "image/jpeg": [".jpg", ".jpeg"],
+        "image/png": [".png"],
+        "image/webp": [".webp"],
       },
       maxFiles,
       maxSize,

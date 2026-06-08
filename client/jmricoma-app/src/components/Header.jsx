@@ -11,7 +11,7 @@ const Header = ({ onLanguageChange, idSection }) => {
   const [selectedLanguage, setSelectedLanguage] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [backgroundImage, setBackgroundImage] = useState('');
-  const [currentSectionIndex, setCurrentSectionIndex] = useState(0); // Track current section index
+  const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const defaultLanguage = 'CA';
   const navigate = useNavigate();
   const location = useLocation();
@@ -56,6 +56,20 @@ const Header = ({ onLanguageChange, idSection }) => {
     }
   }, [selectedLanguage]);
 
+  useEffect(() => {
+    if (sections.length > 0) {
+      const updateCurrentSectionIndex = (path) => {
+        const language = languages.find(lang => lang.id === selectedLanguage);
+        const langCode = language ? language.code.toLowerCase() : defaultLanguage.toLowerCase();
+        const cleanPath = path.replace(`/${langCode}`, '');
+        const sectionIndex = sections.findIndex(section => `/${section.name.toLowerCase()}` === cleanPath);
+        setCurrentSectionIndex(sectionIndex === -1 ? 0 : sectionIndex);
+      };
+
+      updateCurrentSectionIndex(location.pathname);
+    }
+  }, [location.pathname, sections, languages, selectedLanguage]);
+
   const fetchSections = async (id_lang) => {
     try {
       const sectionsData = await getSections(id_lang);
@@ -71,7 +85,7 @@ const Header = ({ onLanguageChange, idSection }) => {
     await fetchSections(id_lang);
     const url = generateLanguageLink(languageCode, sectionName, index);
     navigate(url);
-    setCurrentSectionIndex(index); // Update current section index
+    setCurrentSectionIndex(index);
   };
 
   const toggleMenu = () => {
@@ -88,7 +102,6 @@ const Header = ({ onLanguageChange, idSection }) => {
   const isSelectedSection = (sectionName, index) => {
     const sectionUrl = generateLink(sectionName, index);
     if (index === 0) {
-      // Caso especial para la sección "Home"
       const langCode = languages.find(lang => lang.id === selectedLanguage)?.code.toLowerCase();
       if (langCode && langCode !== defaultLanguage.toLowerCase()) {
         return location.pathname === `/${langCode}`;
@@ -140,7 +153,7 @@ const Header = ({ onLanguageChange, idSection }) => {
               <Link
                 to={generateLink(section.name, index)}
                 className={isSelectedSection(section.name, index) ? 'selected' : ''}
-                onClick={() => setCurrentSectionIndex(index)} // Update current section index on click
+                onClick={() => setCurrentSectionIndex(index)}
               >
                 {section.name.toUpperCase()}
               </Link>

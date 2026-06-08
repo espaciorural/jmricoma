@@ -37,8 +37,8 @@ function App() {
                 <Routes>
                   <Route path="/" element={<Home idSection={1} idLang={selectedLanguage} />} />
                   <Route path="/:lang" element={<Home idSection={1} idLang={selectedLanguage} />} />
-                  <Route path="/serveis" element={<Services idLang={selectedLanguage} />} />
-                  <Route path="/portfolio" element={<Portfolio />} />
+                  <Route path="/serveis" element={<Services idSection={2} idLang={selectedLanguage} />} />
+                  <Route path="/portfolio" element={<Portfolio idLang={selectedLanguage} />} />
                   <Route path="/contact" element={<Contact />} />
                 </Routes>
                 <Footer onLanguageChange={handleLanguageChange} />

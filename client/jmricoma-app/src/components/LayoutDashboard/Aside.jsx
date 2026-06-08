@@ -23,6 +23,7 @@ function Aside() {
           <ul>
             <li className={`p-4 hover:bg-gray-700 cursor-pointer ${isActive('Home')}`} onClick={() => changePage('Home')}>{dashboard.homeLabel}</li>
             <li className={`p-4 hover:bg-gray-700 cursor-pointer ${isActive('Services')}`} onClick={() => changePage('Services')}>{dashboard.servicesLabel}</li>
+            <li className={`p-4 hover:bg-gray-700 cursor-pointer ${isActive('Portfolio')}`} onClick={() => changePage('Portfolio')}>{dashboard.portfolioLabel}</li>
             <li className="p-4 hover:bg-gray-700 cursor-pointer" onClick={handleLogout}>{dashboard.exitLabel}</li>
           </ul>
         </nav>

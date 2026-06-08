@@ -1,0 +1,192 @@
+/* Home.css */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Roboto:wght@400;700&display=swap');
+
+body {
+  font-family: 'Roboto', sans-serif;
+  margin: 0;
+  padding: 0;
+  color:#1a1a1a;
+}
+
+h1 {
+  font-family: 'Roboto', sans-serif;
+  font-size: 72px;
+  color:#fff;
+}
+
+h2 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 52px;
+  color:#d5d5d5
+}
+
+h3 {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 32px;
+  color:#ababab
+}
+
+.content-services {
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+.title-container-services {
+    padding: 120px 0 80px 0;
+    background: linear-gradient(to bottom, #000000, #0d1841 50%, #0d184186);
+}
+
+.descriptions-container-services {
+  position: relative;
+  margin-top: 90px;
+  margin-bottom:80px;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.description-block {
+  display: flex;
+  align-items: flex-start;
+  gap: 80px;
+}
+
+.description {
+  flex: 1;
+  text-align: justify;
+  font-size: 20px;
+}
+
+.description-image {
+  max-width: 150px;
+  height: auto;
+}
+
+.service-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.service-box {
+  perspective: 1000px;
+}
+
+.service-box-inner {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  text-align: center;
+  transform-style: preserve-3d;
+  transition: transform 0.3s;
+  cursor: pointer;
+}
+
+.service-box-front,
+.service-box-back {
+  backface-visibility: hidden;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.service-box-front {
+  background-size: cover;
+  background-position: center;
+}
+
+.service-box-back {
+  background-color: #f9f9f9;
+  transform: rotateY(180deg);
+}
+
+.service-box-content {
+  padding: 10px;
+  border-radius: 8px;
+  color: white; /* Asume que la imagen de fondo puede ser oscura */
+}
+
+.service-box-front .service-box-content {
+  background: rgba(0, 0, 0, 0.5); /* Fondo semitransparente para mejorar la legibilidad */
+}
+
+.service-box-back .service-box-content {
+  background: none;
+  color: black; /* Color del texto en la parte trasera */
+}
+
+/* Animación de fondo */
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+/* Responsive styles */
+@media (max-width: 972px) {
+  .descriptions-container {
+    max-width: 100%;
+    padding: 0 50px;
+  }
+}
+@media (max-width: 768px) {
+  h1 {
+    font-size: 48px;
+  }
+  h2 {
+    font-size: 34px;
+  }
+  h3 {
+    font-size: 26px;
+  }
+  .content {
+    font-size: 1.2rem;
+  }
+  .donut {
+    width: 150px;
+    height: 150px;
+  }
+  .descriptions-container {
+    margin-top: 180px;
+  }
+  .description {
+    font-size: 18px;
+  }
+  .description-block {
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  h1 {
+    font-size: 36px;
+  }
+  h2 {
+    font-size: 26px;
+  }
+  h3 {
+    font-size: 18px;
+  }
+  .content {
+    font-size: 1rem;
+  }
+  .content-wrapper {
+    top: 10rem;
+  }
+  .descriptions-container {
+    margin-top: 200px;
+    padding: 0 30px;
+  }
+  .description {
+    font-size: 16px;
+  }
+  .donut {
+    width: 130px;
+    height: 130px;
+  }
+}

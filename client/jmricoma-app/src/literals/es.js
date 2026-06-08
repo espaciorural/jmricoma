@@ -11,6 +11,7 @@ const literals = {
     dashboard: {
       homeLabel: "Inicio",
       servicesLabel: "Servicios",
+      portfolioLabel: "Portfolio",
       exitLabel: "Salir",
       titles: {
         "/dashboard": "Inicio",

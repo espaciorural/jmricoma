@@ -3,6 +3,7 @@ import { useDashboard } from './../DashboardContext'; // Ajusta la ruta según s
 import Header from './Header';
 import Home from './Home';
 import Services from './Services';
+import Portfolio from './Portfolio';
 import Footer from './Footer';
 
 function MainContent() {
@@ -10,6 +11,8 @@ function MainContent() {
 
   const renderContent = () => {
     switch (currentPage) {
+      case 'Portfolio':
+        return <Portfolio />;
       case 'Services':
         return <Services />;
       case 'Home':

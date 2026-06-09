@@ -38,8 +38,11 @@ function App() {
                   <Route path="/" element={<Home idSection={1} idLang={selectedLanguage} />} />
                   <Route path="/:lang" element={<Home idSection={1} idLang={selectedLanguage} />} />
                   <Route path="/serveis" element={<Services idSection={2} idLang={selectedLanguage} />} />
+                  <Route path="/:lang/serveis" element={<Services idSection={2} idLang={selectedLanguage} />} />
                   <Route path="/portfolio" element={<Portfolio idLang={selectedLanguage} />} />
+                  <Route path="/:lang/portfolio" element={<Portfolio idLang={selectedLanguage} />} />
                   <Route path="/contact" element={<Contact />} />
+                  <Route path="/:lang/contact" element={<Contact />} />
                 </Routes>
                 <Footer onLanguageChange={handleLanguageChange} />
               </>

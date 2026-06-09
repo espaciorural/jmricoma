@@ -5,6 +5,8 @@ import getSections from '../services/sectionService';
 import { getImages } from '../services/imageService';
 import { Slide } from 'react-awesome-reveal';
 
+const SECTION_SLUGS = ['', 'serveis', 'portfolio', 'contact'];
+
 const Header = ({ onLanguageChange, idSection }) => {
   const [languages, setLanguages] = useState([]);
   const [sections, setSections] = useState([]);
@@ -22,10 +24,14 @@ const Header = ({ onLanguageChange, idSection }) => {
         const langs = await getLanguages();
         setLanguages(langs);
         if (langs.length > 0) {
-          const defaultLang = langs[0].id;
-          setSelectedLanguage(defaultLang);
-          await fetchSections(defaultLang);
-          onLanguageChange(defaultLang);
+          const pathLanguageCode = location.pathname.split('/').filter(Boolean)[0]?.toUpperCase();
+          const currentLanguage = langs.find(lang => lang.code.toUpperCase() === pathLanguageCode);
+          const defaultLang = langs.find(lang => lang.code.toUpperCase() === defaultLanguage) || langs[0];
+          const initialLanguage = currentLanguage || defaultLang;
+
+          setSelectedLanguage(initialLanguage.id);
+          await fetchSections(initialLanguage.id);
+          onLanguageChange(initialLanguage.id);
         }
       } catch (error) {
         console.error('Error fetching languages:', error);
@@ -33,7 +39,7 @@ const Header = ({ onLanguageChange, idSection }) => {
     };
 
     fetchLanguages();
-  }, [onLanguageChange]);
+  }, [location.pathname, onLanguageChange]);
 
   useEffect(() => {
     const fetchImages = async () => {
@@ -59,10 +65,14 @@ const Header = ({ onLanguageChange, idSection }) => {
   useEffect(() => {
     if (sections.length > 0) {
       const updateCurrentSectionIndex = (path) => {
-        const language = languages.find(lang => lang.id === selectedLanguage);
-        const langCode = language ? language.code.toLowerCase() : defaultLanguage.toLowerCase();
-        const cleanPath = path.replace(`/${langCode}`, '');
-        const sectionIndex = sections.findIndex(section => `/${section.name.toLowerCase()}` === cleanPath);
+        const pathParts = path.split('/').filter(Boolean);
+        const languageCodes = languages.map(lang => lang.code.toLowerCase());
+        const hasLanguagePrefix = languageCodes.includes(pathParts[0]?.toLowerCase());
+        const sectionSlug = hasLanguagePrefix ? pathParts[1] : pathParts[0];
+        const sectionIndex = sectionSlug
+          ? SECTION_SLUGS.findIndex(slug => slug === sectionSlug.toLowerCase())
+          : 0;
+
         setCurrentSectionIndex(sectionIndex === -1 ? 0 : sectionIndex);
       };
 
@@ -92,30 +102,32 @@ const Header = ({ onLanguageChange, idSection }) => {
     setMenuOpen(!menuOpen);
   };
 
+  const normalizePath = (path) => {
+    const cleanPath = `/${String(path || '').replace(/^\/+|\/+$/g, '')}`;
+    return cleanPath === '/' ? '/' : cleanPath;
+  };
+
+  const buildPublicPath = (languageCode, index) => {
+    const langPrefix = languageCode.toUpperCase() === defaultLanguage ? '' : `/${languageCode.toLowerCase()}`;
+    const sectionSlug = SECTION_SLUGS[index] || '';
+    const sectionPath = sectionSlug ? `/${sectionSlug}` : '';
+
+    return `${langPrefix}${sectionPath}` || '/';
+  };
+
   const generateLink = (sectionName, index) => {
-    const language = languages.find(lang => lang.id === selectedLanguage);
-    const langCode = language && language.code !== defaultLanguage ? `${language.code}` : '';
-    const sectionPath = index === 0 ? '' : `/${sectionName.toLowerCase()}`;
-    return `${langCode.toLowerCase()}${sectionPath}`;
+    const language = languages.find(lang => Number(lang.id) === Number(selectedLanguage));
+    const langCode = language?.code || defaultLanguage;
+
+    return buildPublicPath(langCode, index);
   };
 
   const isSelectedSection = (sectionName, index) => {
-    const sectionUrl = generateLink(sectionName, index);
-    if (index === 0) {
-      const langCode = languages.find(lang => lang.id === selectedLanguage)?.code.toLowerCase();
-      if (langCode && langCode !== defaultLanguage.toLowerCase()) {
-        return location.pathname === `/${langCode}`;
-      } else {
-        return location.pathname === '/';
-      }
-    }
-    return location.pathname.endsWith(sectionUrl);
+    return normalizePath(location.pathname) === normalizePath(generateLink(sectionName, index));
   };
 
   const generateLanguageLink = (languageCode, sectionName, index) => {
-    const langCode = languageCode !== defaultLanguage ? `${languageCode}` : '';
-    const sectionPath = index === 0 ? '' : `/${sectionName.toLowerCase()}`;
-    return `/${langCode.toLowerCase()}${sectionPath}`;
+    return buildPublicPath(languageCode, index);
   };
 
   const [scrolled, setScrolled] = useState(false);
@@ -153,7 +165,10 @@ const Header = ({ onLanguageChange, idSection }) => {
               <Link
                 to={generateLink(section.name, index)}
                 className={isSelectedSection(section.name, index) ? 'selected' : ''}
-                onClick={() => setCurrentSectionIndex(index)}
+                onClick={() => {
+                  setCurrentSectionIndex(index);
+                  setMenuOpen(false);
+                }}
               >
                 {section.name.toUpperCase()}
               </Link>
@@ -164,11 +179,16 @@ const Header = ({ onLanguageChange, idSection }) => {
           {languages.map(language => (
             <li key={language.id}>
               <Link
-                to={language.code.toLowerCase()}
-                className={selectedLanguage === language.id ? 'selected' : ''}
+                to={generateLanguageLink(language.code, sections[currentSectionIndex]?.name || sections[0]?.name || '', currentSectionIndex)}
+                className={Number(selectedLanguage) === Number(language.id) ? 'selected' : ''}
                 onClick={(e) => {
                   e.preventDefault();
-                  handleLanguageChange(language.id, language.code, sections[0]?.name || '', 0);
+                  handleLanguageChange(
+                    language.id,
+                    language.code,
+                    sections[currentSectionIndex]?.name || sections[0]?.name || '',
+                    currentSectionIndex
+                  );
                 }}
               >
                 {language.code}

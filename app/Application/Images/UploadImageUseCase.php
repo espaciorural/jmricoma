@@ -21,7 +21,13 @@ final class UploadImageUseCase
         $relativePath = $this->imageStorage->store($input->uploadedFile, $input->newFilename);
 
         if ($input->sectionId !== null) {
-            $this->imageRepository->create(new Image(null, $relativePath, $input->sectionId, (string) $input->type));
+            try {
+                $this->imageRepository->create(new Image(null, $relativePath, $input->sectionId, (string) $input->type));
+            } catch (\Throwable $exception) {
+                $this->imageStorage->deleteByRelativePath($relativePath);
+
+                throw $exception;
+            }
 
             return UploadImageResult::withMetadata();
         }

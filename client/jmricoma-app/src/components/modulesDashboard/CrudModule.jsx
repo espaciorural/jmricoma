@@ -49,7 +49,7 @@ function CrudModule({ resource, mainResourceIdField }) {
 
   const allLanguages = defaultLanguage ? [defaultLanguage, ...languages] : languages;
 
-  const getRootItemId = (item) => item[mainResourceIdField] || item.id;
+  const getRootItemId = useCallback((item) => item[mainResourceIdField] || item.id, [mainResourceIdField]);
 
   const createEmptyTranslation = (rootItem, languageId) => ({
     title: "",
@@ -89,7 +89,7 @@ function CrudModule({ resource, mainResourceIdField }) {
     const itemsWithImage = await Promise.all(data.map(async (item) => {
       try {
         if (isPortfolio) {
-          const response = await fetch(`/api/get-images?sectionId=${item.id}&type=portfolio_gallery`);
+          const response = await fetch(`/api/get-images?sectionId=${getRootItemId(item)}&type=portfolio_gallery`);
           const result = await response.json();
           return {
             ...item,
@@ -115,7 +115,7 @@ function CrudModule({ resource, mainResourceIdField }) {
 
     setItems(itemsWithImage);
     console.log("All items loaded:", itemsWithImage);
-  }, [resource, isPortfolio]);
+  }, [resource, isPortfolio, getRootItemId]);
 
   const loadLanguages = useCallback(async () => {
     const langs = await getLanguages();
@@ -317,14 +317,15 @@ function CrudModule({ resource, mainResourceIdField }) {
       try {
         if (isPortfolio) {
           const files = Array.isArray(image) ? image : [image];
+          const galleryOwnerId = getRootItemId(itemToManageImage);
 
           await Promise.all(files.map(async (file, index) => {
             const formData = new FormData();
             const extension = file.name.split('.').pop();
-            const newFilename = `${resource}_${itemToManageImage.id}_${Date.now()}_${index}.${extension}`;
+            const newFilename = `${resource}_${galleryOwnerId}_${Date.now()}_${index}.${extension}`;
             formData.append("file", file);
             formData.append("newFilename", newFilename);
-            formData.append("id_section", itemToManageImage.id);
+            formData.append("id_section", galleryOwnerId);
             formData.append("type", "portfolio_gallery");
 
             const response = await fetch('/api/upload-image', {

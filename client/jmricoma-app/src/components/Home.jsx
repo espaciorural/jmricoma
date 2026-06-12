@@ -8,7 +8,21 @@ import { getImages } from "../services/imageService";
 import { getItems } from "../services/crudService";
 import { Fade } from "react-awesome-reveal";
 import { FiArrowRight, FiCode, FiDatabase, FiExternalLink, FiGithub, FiLinkedin, FiMail, FiMapPin } from "react-icons/fi";
-import { SiDocker, SiMysql, SiPhp, SiReact, SiSymfony } from "react-icons/si";
+import {
+  SiBootstrap,
+  SiCss3,
+  SiDocker,
+  SiGit,
+  SiHtml5,
+  SiJavascript,
+  SiJquery,
+  SiLaravel,
+  SiMysql,
+  SiPhp,
+  SiReact,
+  SiSymfony,
+  SiVuedotjs,
+} from "react-icons/si";
 
 const CONTACT_ITEMS = [
   { icon: FiMapPin, text: "Valldoreix, Barcelona" },
@@ -20,8 +34,17 @@ const CONTACT_ITEMS = [
 const TECHNOLOGIES = [
   { icon: SiPhp, label: "PHP" },
   { icon: SiSymfony, label: "Symfony" },
+  { icon: SiLaravel, label: "Laravel" },
   { icon: SiReact, label: "React" },
+  { icon: SiVuedotjs, label: "Vue.js" },
+  { icon: SiJavascript, label: "JavaScript" },
+  { icon: SiHtml5, label: "HTML" },
+  { icon: SiCss3, label: "CSS" },
+  { icon: SiJquery, label: "jQuery" },
   { icon: SiMysql, label: "MySQL" },
+  { icon: FiCode, label: "REST APIs" },
+  { icon: SiBootstrap, label: "Bootstrap" },
+  { icon: SiGit, label: "Git" },
   { icon: SiDocker, label: "Docker" },
 ];
 
@@ -70,7 +93,7 @@ const Home = ({ idSection, idLang }) => {
   const [literals, setLiterals] = useState([]);
   const [projects, setProjects] = useState([]);
   const [services, setServices] = useState([]);
-  const [heroImage, setHeroImage] = useState("/uploads/josep.webp");
+  const [heroImage, setHeroImage] = useState("");
   const [currentLanguageCode, setCurrentLanguageCode] = useState("CA");
   const currentLanguageId = Number(idLang || 1);
 
@@ -123,7 +146,8 @@ const Home = ({ idSection, idLang }) => {
 
       const projectsWithGallery = await Promise.all(
         visibleProjects.map(async (project) => {
-          const gallery = await getImages(project.id, "portfolio_gallery");
+          const galleryOwnerId = project.main_portfolio_id || project.id;
+          const gallery = await getImages(galleryOwnerId, "portfolio_gallery");
 
           return {
             ...project,
@@ -169,7 +193,15 @@ const Home = ({ idSection, idLang }) => {
   return (
     <main className="home-page">
       <section className="home-hero">
-        <div className="home-shell home-hero-grid">
+        {heroImage && (
+          <div className="home-hero-background" aria-hidden="true">
+            <img src={heroImage} alt="" />
+          </div>
+        )}
+        <div
+          className="home-shell home-hero-grid"
+          style={{ "--home-visual-background": "url('/uploads/background-header.png')" }}
+        >
           <Fade direction="up" duration={700} triggerOnce>
             <div className="home-hero-copy">
               <p className="home-kicker">{labels.availability}</p>
@@ -187,18 +219,19 @@ const Home = ({ idSection, idLang }) => {
                 </Link>
               </div>
               <div className="home-tech-list" aria-label="Tecnologies">
-                {TECHNOLOGIES.map(({ icon: Icon, label }) => (
-                  <span key={label}>
-                    <Icon aria-hidden="true" />
-                    {label}
-                  </span>
-                ))}
+                <div className="home-tech-track">
+                  {[...TECHNOLOGIES, ...TECHNOLOGIES].map(({ icon: Icon, label }, index) => (
+                    <span key={`${label}-${index}`}>
+                      <Icon aria-hidden="true" />
+                      {label}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
           </Fade>
 
           <div className="home-hero-visual">
-            <img src={heroImage} alt="Josep Maria Ricoma" />
             <div className="home-contact-card">
               {CONTACT_ITEMS.map(({ icon: Icon, text, href }) => {
                 const content = (

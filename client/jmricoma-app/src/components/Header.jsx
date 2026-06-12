@@ -2,17 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { getLanguages } from '../services/languageService';
 import getSections from '../services/sectionService';
-import { getImages } from '../services/imageService';
-import { Slide } from 'react-awesome-reveal';
+import { FiSend } from 'react-icons/fi';
 
 const SECTION_SLUGS = ['', 'serveis', 'portfolio', 'contact'];
 
-const Header = ({ onLanguageChange, idSection }) => {
+const Header = ({ onLanguageChange }) => {
   const [languages, setLanguages] = useState([]);
   const [sections, setSections] = useState([]);
   const [selectedLanguage, setSelectedLanguage] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [backgroundImage, setBackgroundImage] = useState('');
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const defaultLanguage = 'CA';
   const navigate = useNavigate();
@@ -40,21 +38,6 @@ const Header = ({ onLanguageChange, idSection }) => {
 
     fetchLanguages();
   }, [location.pathname, onLanguageChange]);
-
-  useEffect(() => {
-    const fetchImages = async () => {
-      try {
-        const images = await getImages(1, 'header');
-        if (images.length > 0) {
-          setBackgroundImage(images[0].path);
-        }
-      } catch (error) {
-        console.error('Error fetching images:', error);
-      }
-    };
-
-    fetchImages();
-  }, []);
 
   useEffect(() => {
     if (selectedLanguage) {
@@ -130,6 +113,11 @@ const Header = ({ onLanguageChange, idSection }) => {
     return buildPublicPath(languageCode, index);
   };
 
+  const contactPath = () => {
+    const language = languages.find(lang => Number(lang.id) === Number(selectedLanguage));
+    return buildPublicPath(language?.code || defaultLanguage, 3);
+  };
+
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -150,17 +138,19 @@ const Header = ({ onLanguageChange, idSection }) => {
 
   return (
     <div className="header">
-      {currentSectionIndex === 0 && (
-        <Slide direction="down" duration={1000} triggerOnce>
-          <div className="background" style={{ backgroundImage: `url(${backgroundImage})` }}></div>
-        </Slide>
-      )}
       <nav className={`${scrolled ? 'nav-scrolled' : ''}`}>
+        <Link to={generateLink('', 0)} className="brand-link" onClick={() => setMenuOpen(false)}>
+          <span className="brand-mark">JR</span>
+          <span className="brand-copy">
+            <strong>Josep Maria Ricoma</strong>
+            <small>Desenvolupador PHP / Symfony</small>
+          </span>
+        </Link>
         <button className="menu-toggle" onClick={toggleMenu}>
           &#9776;
         </button>
         <ul className={`nav-links ${menuOpen ? 'open' : ''}`}>
-          {sections.map((section, index) => (
+          {sections.slice(0, 3).map((section, index) => (
             <li key={section.id}>
               <Link
                 to={generateLink(section.name, index)}
@@ -175,27 +165,34 @@ const Header = ({ onLanguageChange, idSection }) => {
             </li>
           ))}
         </ul>
-        <ul className="language-switcher" style={{ marginLeft: 'auto' }}>
-          {languages.map(language => (
-            <li key={language.id}>
-              <Link
-                to={generateLanguageLink(language.code, sections[currentSectionIndex]?.name || sections[0]?.name || '', currentSectionIndex)}
-                className={Number(selectedLanguage) === Number(language.id) ? 'selected' : ''}
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleLanguageChange(
-                    language.id,
-                    language.code,
-                    sections[currentSectionIndex]?.name || sections[0]?.name || '',
-                    currentSectionIndex
-                  );
-                }}
-              >
-                {language.code}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <div className="nav-actions">
+          <ul className="language-switcher">
+            {languages.map(language => (
+              <li key={language.id}>
+                <Link
+                  to={generateLanguageLink(language.code, sections[currentSectionIndex]?.name || sections[0]?.name || '', currentSectionIndex)}
+                  className={Number(selectedLanguage) === Number(language.id) ? 'selected' : ''}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleLanguageChange(
+                      language.id,
+                      language.code,
+                      sections[currentSectionIndex]?.name || sections[0]?.name || '',
+                      currentSectionIndex
+                    );
+                    setMenuOpen(false);
+                  }}
+                >
+                  {language.code}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <Link to={contactPath()} className="contact-button" onClick={() => setMenuOpen(false)}>
+            <FiSend aria-hidden="true" />
+            Contactar
+          </Link>
+        </div>
       </nav>
     </div>
   );

@@ -43,7 +43,8 @@ const Portfolio = ({ idLang }) => {
 
       const projectsWithGallery = await Promise.all(
         filteredProjects.map(async (project) => {
-          const gallery = await getImages(project.id, "portfolio_gallery");
+          const galleryOwnerId = project.main_portfolio_id || project.id;
+          const gallery = await getImages(galleryOwnerId, "portfolio_gallery");
 
           return {
             ...project,

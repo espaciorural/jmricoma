@@ -37,7 +37,8 @@ const Contact = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const formData = new FormData(form);
 
     setFormState({
       status: 'sending',
@@ -51,7 +52,7 @@ const Contact = () => {
         message: formData.get('message'),
       });
 
-      event.currentTarget.reset();
+      form.reset();
       setFormState({
         status: 'success',
         message: 'Missatge enviat correctament. Et respondré tan aviat com pugui.',

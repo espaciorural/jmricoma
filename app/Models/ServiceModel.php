@@ -8,5 +8,6 @@ class ServiceModel extends Model
 {
     protected $table = 'services';
     protected $primaryKey = 'id';
-    protected $allowedFields = ['title', 'description', 'id_lang', 'status', 'main_service_id'];
+    protected $allowedFields = ['title', 'description', 'id_lang', 'status', 'item', 'main_service_id'];
+    protected $useTimestamps = true;
 }

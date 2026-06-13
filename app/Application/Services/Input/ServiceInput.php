@@ -11,6 +11,7 @@ final class ServiceInput
         public readonly ?string $description,
         public readonly int $languageId,
         public readonly int $status,
+        public readonly int $item,
         public readonly ?int $mainServiceId
     ) {
     }
@@ -24,6 +25,7 @@ final class ServiceInput
                 : null,
             (int) ($data['id_lang'] ?? 0),
             (int) ($data['status'] ?? 1),
+            (int) ($data['item'] ?? 0),
             isset($data['main_service_id']) && $data['main_service_id'] !== ''
                 ? (int) $data['main_service_id']
                 : null
@@ -38,6 +40,7 @@ final class ServiceInput
             $this->description,
             $this->languageId,
             $this->status,
+            $this->item,
             $this->mainServiceId
         );
     }

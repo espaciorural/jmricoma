@@ -37,9 +37,9 @@ const Portfolio = ({ idLang }) => {
   const fetchPortfolio = useCallback(async () => {
     try {
       const portfolioData = await getItems("portfolio");
-      const filteredProjects = portfolioData.filter(
-        (project) => Number(project.id_lang) === currentLanguageId && Number(project.status) === 1
-      );
+      const filteredProjects = portfolioData
+        .filter((project) => Number(project.id_lang) === currentLanguageId && Number(project.status) === 1)
+        .sort((a, b) => Number(a.item || 0) - Number(b.item || 0));
 
       const projectsWithGallery = await Promise.all(
         filteredProjects.map(async (project) => {
@@ -130,6 +130,13 @@ const Portfolio = ({ idLang }) => {
               <div className="portfolio-project-body">
                 <h2>{project.title}</h2>
                 {project.description && <p>{project.description}</p>}
+                {project.skills && (
+                  <div className="portfolio-skill-list">
+                    {project.skills.split(",").map((skill) => skill.trim()).filter(Boolean).map((skill) => (
+                      <span key={skill}>{skill}</span>
+                    ))}
+                  </div>
+                )}
                 {project.project_url && (
                   <a href={formatExternalUrl(project.project_url)} target="_blank" rel="noreferrer" className="portfolio-link">
                     Veure projecte

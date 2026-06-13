@@ -16,6 +16,7 @@ final class ServiceMapper
                 : null,
             (int) ($data['id_lang'] ?? 0),
             (int) ($data['status'] ?? 1),
+            (int) ($data['item'] ?? 0),
             isset($data['main_service_id']) && $data['main_service_id'] !== ''
                 ? (int) $data['main_service_id']
                 : null
@@ -29,6 +30,7 @@ final class ServiceMapper
             'description' => $service->description(),
             'id_lang' => $service->languageId(),
             'status' => $service->status(),
+            'item' => $service->item(),
             'main_service_id' => $service->mainServiceId(),
         ];
     }

@@ -17,8 +17,10 @@ final class PortfolioView
             'title' => $portfolioItem->title(),
             'description' => $portfolioItem->description(),
             'project_url' => $portfolioItem->projectUrl(),
+            'skills' => $portfolioItem->skills(),
             'id_lang' => $portfolioItem->languageId(),
             'status' => $portfolioItem->status(),
+            'item' => $portfolioItem->item(),
             'main_portfolio_id' => $portfolioItem->mainPortfolioId(),
         ]);
     }

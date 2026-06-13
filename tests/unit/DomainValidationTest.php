@@ -1,6 +1,7 @@
 <?php
 
 use App\Domain\Images\Image;
+use App\Domain\Contact\ContactMessage;
 use App\Domain\Services\Service;
 use App\Domain\Shared\Exception\InvalidDomainData;
 use PHPUnit\Framework\TestCase;
@@ -12,7 +13,7 @@ final class DomainValidationTest extends TestCase
         $this->expectException(InvalidDomainData::class);
         $this->expectExceptionMessage('Service title cannot be empty.');
 
-        new Service(null, '   ', null, 1, 1, null);
+        new Service(null, '   ', null, 1, 1, 0, null);
     }
 
     public function testServiceRequiresValidStatus(): void
@@ -20,7 +21,7 @@ final class DomainValidationTest extends TestCase
         $this->expectException(InvalidDomainData::class);
         $this->expectExceptionMessage('Service status must be 0 or 1.');
 
-        new Service(null, 'SEO', null, 1, 3, null);
+        new Service(null, 'SEO', null, 1, 3, 0, null);
     }
 
     public function testImageRequiresPath(): void
@@ -37,5 +38,13 @@ final class DomainValidationTest extends TestCase
         $this->expectExceptionMessage('Image type cannot be empty.');
 
         new Image(null, 'uploads/header.webp', 1, ' ');
+    }
+
+    public function testContactMessageRequiresValidEmail(): void
+    {
+        $this->expectException(InvalidDomainData::class);
+        $this->expectExceptionMessage('Contact email is invalid.');
+
+        new ContactMessage('Josep', 'not-an-email', 'Hola');
     }
 }

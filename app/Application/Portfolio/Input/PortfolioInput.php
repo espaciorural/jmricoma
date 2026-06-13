@@ -10,8 +10,10 @@ final class PortfolioInput
         public readonly string $title,
         public readonly ?string $description,
         public readonly ?string $projectUrl,
+        public readonly ?string $skills,
         public readonly int $languageId,
         public readonly int $status,
+        public readonly int $item,
         public readonly ?int $mainPortfolioId
     ) {
     }
@@ -26,8 +28,12 @@ final class PortfolioInput
             array_key_exists('project_url', $data) && $data['project_url'] !== null
                 ? (string) $data['project_url']
                 : null,
+            array_key_exists('skills', $data) && $data['skills'] !== null
+                ? (string) $data['skills']
+                : null,
             (int) ($data['id_lang'] ?? 0),
             (int) ($data['status'] ?? 1),
+            (int) ($data['item'] ?? 0),
             isset($data['main_portfolio_id']) && $data['main_portfolio_id'] !== ''
                 ? (int) $data['main_portfolio_id']
                 : null
@@ -41,8 +47,10 @@ final class PortfolioInput
             $this->title,
             $this->description,
             $this->projectUrl,
+            $this->skills,
             $this->languageId,
             $this->status,
+            $this->item,
             $this->mainPortfolioId
         );
     }

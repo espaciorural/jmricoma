@@ -15,19 +15,20 @@ final class ServiceUseCasesTest extends TestCase
     public function testItListsServices(): void
     {
         $repository = new InMemoryServiceRepository([
-            new Service(1, 'Web development', 'Custom websites', 1, 1, null),
+            new Service(1, 'Web development', 'Custom websites', 1, 1, 0, null),
         ]);
 
         $services = (new ListServicesUseCase($repository))->execute();
 
         $this->assertSame('Web development', $services[0]->toArray()['title']);
         $this->assertSame(1, $services[0]->toArray()['id_lang']);
+        $this->assertSame(0, $services[0]->toArray()['item']);
     }
 
     public function testItGetsServiceById(): void
     {
         $repository = new InMemoryServiceRepository([
-            new Service(2, 'SEO', null, 1, 1, null),
+            new Service(2, 'SEO', null, 1, 1, 0, null),
         ]);
 
         $service = (new GetServiceUseCase($repository))->execute(2);
@@ -44,17 +45,19 @@ final class ServiceUseCasesTest extends TestCase
             'description' => 'Monthly support',
             'id_lang' => 1,
             'status' => 1,
+            'item' => 2,
             'main_service_id' => null,
         ]));
 
         $this->assertSame(1, $service->toArray()['id']);
         $this->assertSame('Maintenance', $service->toArray()['title']);
+        $this->assertSame(2, $service->toArray()['item']);
     }
 
     public function testItUpdatesService(): void
     {
         $repository = new InMemoryServiceRepository([
-            new Service(1, 'Old title', null, 1, 1, null),
+            new Service(1, 'Old title', null, 1, 1, 0, null),
         ]);
 
         $updated = (new UpdateServiceUseCase($repository))->execute(1, ServiceInput::fromArray([
@@ -62,6 +65,7 @@ final class ServiceUseCasesTest extends TestCase
             'description' => null,
             'id_lang' => 1,
             'status' => 1,
+            'item' => 3,
             'main_service_id' => null,
         ]));
 
@@ -69,12 +73,13 @@ final class ServiceUseCasesTest extends TestCase
 
         $this->assertTrue($updated);
         $this->assertSame('New title', $service->toArray()['title']);
+        $this->assertSame(3, $service->toArray()['item']);
     }
 
     public function testItDeletesService(): void
     {
         $repository = new InMemoryServiceRepository([
-            new Service(1, 'To delete', null, 1, 1, null),
+            new Service(1, 'To delete', null, 1, 1, 0, null),
         ]);
 
         $deleted = (new DeleteServiceUseCase($repository))->execute(1);
@@ -117,6 +122,7 @@ final class InMemoryServiceRepository implements ServiceRepositoryInterface
             $service->description(),
             $service->languageId(),
             $service->status(),
+            $service->item(),
             $service->mainServiceId()
         );
         $this->services[$id] = $created;
@@ -136,6 +142,7 @@ final class InMemoryServiceRepository implements ServiceRepositoryInterface
             $service->description(),
             $service->languageId(),
             $service->status(),
+            $service->item(),
             $service->mainServiceId()
         );
 

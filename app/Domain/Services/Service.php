@@ -12,6 +12,7 @@ final class Service
         private ?string $description,
         private int $languageId,
         private int $status,
+        private int $item,
         private ?int $mainServiceId
     ) {
         $this->title = trim($title);
@@ -34,6 +35,10 @@ final class Service
 
         if (! in_array($this->status, [0, 1], true)) {
             throw new InvalidDomainData('Service status must be 0 or 1.');
+        }
+
+        if ($this->item < 0) {
+            throw new InvalidDomainData('Service item order must not be negative.');
         }
 
         if ($this->mainServiceId !== null && $this->mainServiceId < 1) {
@@ -64,6 +69,11 @@ final class Service
     public function status(): int
     {
         return $this->status;
+    }
+
+    public function item(): int
+    {
+        return $this->item;
     }
 
     public function mainServiceId(): ?int

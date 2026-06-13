@@ -48,4 +48,8 @@ $routes->group('', ['namespace' => 'App\Controllers'], function($routes) {
     $routes->options('api/portfolio/update/(:segment)', 'PortfolioController::optionsHandler/$1');
     $routes->delete('api/portfolio/delete/(:segment)', 'PortfolioController::delete/$1');
     $routes->options('api/portfolio/delete/(:segment)', 'PortfolioController::optionsHandler/$1');
+
+    // Rutas para ContactController
+    $routes->post('api/contact', 'ContactController::send');
+    $routes->options('api/contact', 'ContactController::optionsHandler');
 });

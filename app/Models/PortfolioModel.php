@@ -12,8 +12,10 @@ class PortfolioModel extends Model
         'title',
         'description',
         'project_url',
+        'skills',
         'id_lang',
         'status',
+        'item',
         'main_portfolio_id',
     ];
     protected $useTimestamps = true;

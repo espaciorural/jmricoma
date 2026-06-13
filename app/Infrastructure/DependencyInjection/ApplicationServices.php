@@ -3,6 +3,7 @@
 namespace App\Infrastructure\DependencyInjection;
 
 use App\Application\Auth\LoginUserUseCase;
+use App\Application\Contact\SendContactMessageUseCase;
 use App\Application\Images\CheckImageUseCase;
 use App\Application\Images\DeleteImageUseCase;
 use App\Application\Images\GetImagesUseCase;
@@ -25,6 +26,8 @@ use App\Domain\Services\ServiceRepositoryInterface;
 use App\Infrastructure\Auth\CodeIgniterAccessRepository;
 use App\Infrastructure\Auth\JwtTokenGenerator;
 use App\Infrastructure\Auth\NativePasswordVerifier;
+use App\Infrastructure\Contact\CodeIgniterContactMessageSender;
+use App\Infrastructure\Contact\GoogleRecaptchaVerifier;
 use App\Infrastructure\Images\CodeIgniterImageRepository;
 use App\Infrastructure\Images\CodeIgniterPublicUrlGenerator;
 use App\Infrastructure\Images\LocalPublicImageStorage;
@@ -129,6 +132,27 @@ final class ApplicationServices
         return new CheckImageUseCase(
             self::imageStorage(),
             self::publicUrlGenerator()
+        );
+    }
+
+    public static function sendContactMessageUseCase(): SendContactMessageUseCase
+    {
+        $config = config('Contact');
+
+        return new SendContactMessageUseCase(
+            new GoogleRecaptchaVerifier(
+                service('curlrequest'),
+                $config->recaptchaEnabled,
+                $config->recaptchaSecretKey,
+                $config->recaptchaMinimumScore
+            ),
+            new CodeIgniterContactMessageSender(
+                service('email'),
+                $config->recipientEmail,
+                $config->fromEmail,
+                $config->fromName
+            ),
+            $config->recaptchaExpectedAction
         );
     }
 

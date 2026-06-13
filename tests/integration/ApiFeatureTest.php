@@ -27,6 +27,7 @@ final class ApiFeatureTest extends CIUnitTestCase
             'description' => 'Created inside an integration test',
             'id_lang' => 1,
             'status' => 1,
+            'item' => 4,
             'main_service_id' => null,
         ]);
 
@@ -38,6 +39,7 @@ final class ApiFeatureTest extends CIUnitTestCase
         $this->assertSame('Codex HTTP service', $payload[0]['title']);
         $this->assertSame(1, $payload[0]['id_lang']);
         $this->assertSame(1, $payload[0]['status']);
+        $this->assertSame(4, $payload[0]['item']);
     }
 
     public function testItCreatesServiceThroughHttp(): void
@@ -49,6 +51,7 @@ final class ApiFeatureTest extends CIUnitTestCase
                 'description' => 'Feature test payload',
                 'id_lang' => 1,
                 'status' => 1,
+                'item' => 2,
                 'main_service_id' => null,
             ]);
 
@@ -56,6 +59,7 @@ final class ApiFeatureTest extends CIUnitTestCase
         $response->assertJSONFragment([
             'title' => 'Created over HTTP',
             'description' => 'Feature test payload',
+            'item' => 2,
         ]);
 
         $this->seeInDatabase('services', ['title' => 'Created over HTTP']);
@@ -83,8 +87,10 @@ final class ApiFeatureTest extends CIUnitTestCase
                 'title' => 'Portfolio HTTP project',
                 'description' => 'Portfolio integration payload',
                 'project_url' => 'https://example.com/project',
+                'skills' => 'PHP, Symfony',
                 'id_lang' => 1,
                 'status' => 1,
+                'item' => 3,
                 'main_portfolio_id' => null,
             ]);
 
@@ -92,6 +98,8 @@ final class ApiFeatureTest extends CIUnitTestCase
         $response->assertJSONFragment([
             'title' => 'Portfolio HTTP project',
             'project_url' => 'https://example.com/project',
+            'skills' => 'PHP, Symfony',
+            'item' => 3,
         ]);
 
         $this->seeInDatabase('portfolio', ['title' => 'Portfolio HTTP project']);
@@ -104,8 +112,10 @@ final class ApiFeatureTest extends CIUnitTestCase
             'title' => 'Listed portfolio project',
             'description' => 'Visible over HTTP',
             'project_url' => null,
+            'skills' => 'React, API',
             'id_lang' => 1,
             'status' => 1,
+            'item' => 2,
             'main_portfolio_id' => null,
         ]);
 
@@ -116,6 +126,8 @@ final class ApiFeatureTest extends CIUnitTestCase
 
         $this->assertSame('Listed portfolio project', $payload[0]['title']);
         $this->assertSame(1, $payload[0]['id_lang']);
+        $this->assertSame('React, API', $payload[0]['skills']);
+        $this->assertSame(2, $payload[0]['item']);
     }
 
     public function testItDeletesPortfolioGalleryImagesWhenDeletingPortfolioItemThroughHttp(): void
@@ -125,8 +137,10 @@ final class ApiFeatureTest extends CIUnitTestCase
             'title' => 'Portfolio with gallery',
             'description' => null,
             'project_url' => null,
+            'skills' => null,
             'id_lang' => 1,
             'status' => 1,
+            'item' => 0,
             'main_portfolio_id' => null,
         ]);
         $portfolioId = $db->insertID();
@@ -195,6 +209,21 @@ final class ApiFeatureTest extends CIUnitTestCase
         ]);
     }
 
+    public function testItRejectsInvalidContactPayloadThroughHttp(): void
+    {
+        $response = $this
+            ->withBodyFormat('json')
+            ->post('/api/contact', [
+                'name' => '',
+                'email' => 'not-an-email',
+                'message' => '',
+                'captchaToken' => '',
+            ]);
+
+        $response->assertStatus(400);
+        $response->assertJSONFragment(['status' => 400]);
+    }
+
     private function createSchema(): void
     {
         $db = Database::connect('tests');
@@ -223,8 +252,20 @@ final class ApiFeatureTest extends CIUnitTestCase
             'status' => [
                 'type' => 'INTEGER',
             ],
+            'item' => [
+                'type' => 'INTEGER',
+                'default' => 0,
+            ],
             'main_service_id' => [
                 'type' => 'INTEGER',
+                'null' => true,
+            ],
+            'created_at' => [
+                'type' => 'DATETIME',
+                'null' => true,
+            ],
+            'updated_at' => [
+                'type' => 'DATETIME',
                 'null' => true,
             ],
         ]);
@@ -249,11 +290,20 @@ final class ApiFeatureTest extends CIUnitTestCase
                 'constraint' => 255,
                 'null' => true,
             ],
+            'skills' => [
+                'type' => 'VARCHAR',
+                'constraint' => 500,
+                'null' => true,
+            ],
             'id_lang' => [
                 'type' => 'INTEGER',
             ],
             'status' => [
                 'type' => 'INTEGER',
+            ],
+            'item' => [
+                'type' => 'INTEGER',
+                'default' => 0,
             ],
             'main_portfolio_id' => [
                 'type' => 'INTEGER',

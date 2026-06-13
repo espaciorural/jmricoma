@@ -37,9 +37,9 @@ const Services = ({ idSection, idLang }) => {
       const servicesData = await getItems("services");
       servicesData.forEach(service => console.log(`Service id_lang: ${service.id_lang}`));
 
-      const filteredServices = servicesData.filter(
-        (service) => service.id_lang === idLang
-      );
+      const filteredServices = servicesData
+        .filter((service) => Number(service.id_lang) === Number(idLang))
+        .sort((a, b) => Number(a.item || 0) - Number(b.item || 0));
 
       const servicesWithImages = await Promise.all(
         filteredServices.map(async (service) => {

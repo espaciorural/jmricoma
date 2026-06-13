@@ -18,6 +18,7 @@ final class ServiceView
             'description' => $service->description(),
             'id_lang' => $service->languageId(),
             'status' => $service->status(),
+            'item' => $service->item(),
             'main_service_id' => $service->mainServiceId(),
         ]);
     }

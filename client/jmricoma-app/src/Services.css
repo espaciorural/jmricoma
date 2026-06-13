@@ -33,7 +33,7 @@ h3 {
 }
 .title-container-services {
     padding: 120px 0 80px 0;
-    background: linear-gradient(to bottom, #000000, #0d1841 50%, #0d184186);
+    background: linear-gradient(to bottom, #000000, #0d1841 50%, #030923);
 }
 
 .descriptions-container-services {
@@ -110,7 +110,7 @@ h3 {
 }
 
 .service-box-front .service-box-content {
-  background: rgba(0, 0, 0, 0.5); /* Fondo semitransparente para mejorar la legibilidad */
+  background: rgba(0, 0, 0, 0.8); /* Fondo semitransparente para mejorar la legibilidad */
 }
 
 .service-box-back .service-box-content {

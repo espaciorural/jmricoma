@@ -142,6 +142,7 @@ const Home = ({ idSection, idLang }) => {
 
       const visibleProjects = portfolioData
         .filter((project) => Number(project.id_lang) === currentLanguageId && Number(project.status) === 1)
+        .sort((a, b) => Number(a.item || 0) - Number(b.item || 0))
         .slice(0, 3);
 
       const projectsWithGallery = await Promise.all(
@@ -160,6 +161,7 @@ const Home = ({ idSection, idLang }) => {
       setServices(
         servicesData
           .filter((service) => Number(service.id_lang) === currentLanguageId && Number(service.status) === 1)
+          .sort((a, b) => Number(a.item || 0) - Number(b.item || 0))
           .slice(0, 4)
       );
     } catch (error) {
@@ -205,10 +207,10 @@ const Home = ({ idSection, idLang }) => {
           <Fade direction="up" duration={700} triggerOnce>
             <div className="home-hero-copy">
               <p className="home-kicker">{labels.availability}</p>
-              <h1>{literalByType.title || "Josep Maria Ricoma"}</h1>
-              <h2>{literalByType.subtitle || "Desenvolupo aplicacions web robustes, escalables i orientades a negoci."}</h2>
+              <h1>{literalByType.title || "Web Fullstack Developer"}</h1>
+              <h2>{literalByType.subtitle || "Més de 20 anys d'experiència"}</h2>
               <p className="home-hero-text">
-                {literalByType.description || "Mes de 20 anys d'experiencia creant solucions amb PHP, Symfony i tecnologies modernes."}
+                {literalByType.description || "Especialitzat en PHP, Symfony i integracions empresarials. Desenvolupo aplicacions escalables, APIs i eines de negoci."}
               </p>
               <div className="home-actions">
                 <Link to={portfolioPath} className="home-button home-button-primary">
@@ -279,6 +281,13 @@ const Home = ({ idSection, idLang }) => {
                 <div className="home-project-body">
                   <h3>{project.title}</h3>
                   {project.description && <p>{project.description}</p>}
+                  {project.skills && (
+                    <div className="home-project-skills">
+                      {project.skills.split(",").map((skill) => skill.trim()).filter(Boolean).map((skill) => (
+                        <span key={skill}>{skill}</span>
+                      ))}
+                    </div>
+                  )}
                   {project.project_url && (
                     <a href={formatExternalUrl(project.project_url)} target="_blank" rel="noreferrer" className="home-card-link">
                       {labels.projectLink} <FiArrowRight aria-hidden="true" />

@@ -17,8 +17,12 @@ final class PortfolioMapper
             array_key_exists('project_url', $data) && $data['project_url'] !== null
                 ? (string) $data['project_url']
                 : null,
+            array_key_exists('skills', $data) && $data['skills'] !== null
+                ? (string) $data['skills']
+                : null,
             (int) ($data['id_lang'] ?? 0),
             (int) ($data['status'] ?? 1),
+            (int) ($data['item'] ?? 0),
             isset($data['main_portfolio_id']) && $data['main_portfolio_id'] !== ''
                 ? (int) $data['main_portfolio_id']
                 : null
@@ -31,8 +35,10 @@ final class PortfolioMapper
             'title' => $portfolioItem->title(),
             'description' => $portfolioItem->description(),
             'project_url' => $portfolioItem->projectUrl(),
+            'skills' => $portfolioItem->skills(),
             'id_lang' => $portfolioItem->languageId(),
             'status' => $portfolioItem->status(),
+            'item' => $portfolioItem->item(),
             'main_portfolio_id' => $portfolioItem->mainPortfolioId(),
         ];
     }

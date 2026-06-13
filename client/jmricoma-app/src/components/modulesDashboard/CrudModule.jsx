@@ -27,11 +27,14 @@ const Tabs = ({ languages, currentTab, setCurrentTab }) => (
 
 function CrudModule({ resource, mainResourceIdField }) {
   const isPortfolio = resource === "portfolio";
+  const isSortableResource = ["portfolio", "services"].includes(resource);
   const [items, setItems] = useState([]);
   const [newItem, setNewItem] = useState({
     title: "",
     description: "",
     project_url: "",
+    skills: "",
+    item: 0,
     id_lang: 1,
     status: 1,
   });
@@ -46,6 +49,7 @@ function CrudModule({ resource, mainResourceIdField }) {
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [itemToManageImage, setItemToManageImage] = useState(null);
   const [image, setImage] = useState(null);
+  const [draggedItemId, setDraggedItemId] = useState(null);
 
   const allLanguages = defaultLanguage ? [defaultLanguage, ...languages] : languages;
 
@@ -85,8 +89,11 @@ function CrudModule({ resource, mainResourceIdField }) {
 
   const loadItems = useCallback(async () => {
     const data = await getItems(resource);
+    const sortedData = isSortableResource
+      ? [...data].sort((a, b) => Number(a.item || 0) - Number(b.item || 0))
+      : data;
     
-    const itemsWithImage = await Promise.all(data.map(async (item) => {
+    const itemsWithImage = await Promise.all(sortedData.map(async (item) => {
       try {
         if (isPortfolio) {
           const response = await fetch(`/api/get-images?sectionId=${getRootItemId(item)}&type=portfolio_gallery`);
@@ -115,7 +122,7 @@ function CrudModule({ resource, mainResourceIdField }) {
 
     setItems(itemsWithImage);
     console.log("All items loaded:", itemsWithImage);
-  }, [resource, isPortfolio, getRootItemId]);
+  }, [resource, isPortfolio, isSortableResource, getRootItemId]);
 
   const loadLanguages = useCallback(async () => {
     const langs = await getLanguages();
@@ -134,12 +141,15 @@ function CrudModule({ resource, mainResourceIdField }) {
 
   const handleCreateItem = async () => {
     try {
-      const createdItem = await createItem(resource, newItem);
+      const itemToCreate = isSortableResource
+        ? { ...newItem, item: rootItems.length + 1 }
+        : newItem;
+      const createdItem = await createItem(resource, itemToCreate);
       if (createdItem) {
         const newItems = [...items, createdItem];
         const itemCreationPromises = languages.map(lang => {
           const itemInOtherLang = {
-            ...newItem,
+            ...itemToCreate,
             id_lang: lang.id,
             [mainResourceIdField]: createdItem.id,
           };
@@ -154,7 +164,7 @@ function CrudModule({ resource, mainResourceIdField }) {
         });
 
         setItems(newItems);
-        setNewItem({ title: "", description: "", project_url: "", id_lang: 1, status: 1 });
+        setNewItem({ title: "", description: "", project_url: "", skills: "", item: 0, id_lang: 1, status: 1 });
         setIsCreateModalOpen(false);
         console.log("Item created:", createdItem);
         await loadItems();
@@ -421,11 +431,71 @@ function CrudModule({ resource, mainResourceIdField }) {
     }
   };
 
+  const rootItems = items
+    .filter(item => item[mainResourceIdField] === null)
+    .sort((a, b) => Number(a.item || 0) - Number(b.item || 0));
+
+  const openCreateModal = () => {
+    setNewItem((currentItem) => ({
+      ...currentItem,
+      item: isSortableResource ? rootItems.length + 1 : currentItem.item,
+    }));
+    setIsCreateModalOpen(true);
+  };
+
+  const handleDragStart = (id) => {
+    setDraggedItemId(id);
+  };
+
+  const handleDrop = async (targetId) => {
+    if (!isSortableResource || draggedItemId === null || Number(draggedItemId) === Number(targetId)) {
+      setDraggedItemId(null);
+      return;
+    }
+
+    const draggedIndex = rootItems.findIndex(item => Number(item.id) === Number(draggedItemId));
+    const targetIndex = rootItems.findIndex(item => Number(item.id) === Number(targetId));
+
+    if (draggedIndex === -1 || targetIndex === -1) {
+      setDraggedItemId(null);
+      return;
+    }
+
+    const reorderedItems = [...rootItems];
+    const [draggedItem] = reorderedItems.splice(draggedIndex, 1);
+    reorderedItems.splice(targetIndex, 0, draggedItem);
+
+    const updates = reorderedItems.flatMap((rootItem, index) => {
+      const order = index + 1;
+      const relatedItems = items.filter(item =>
+        Number(item.id) === Number(rootItem.id) ||
+        Number(item[mainResourceIdField]) === Number(rootItem.id)
+      );
+
+      return relatedItems.map(item => ({ ...item, item: order }));
+    });
+
+    setItems(currentItems => currentItems.map(currentItem => {
+      const updatedItem = updates.find(item => Number(item.id) === Number(currentItem.id));
+      return updatedItem || currentItem;
+    }));
+
+    try {
+      await Promise.all(updates.map(item => updateItem(resource, item.id, item)));
+      await loadItems();
+    } catch (error) {
+      console.error("Error updating portfolio order:", error);
+      await loadItems();
+    } finally {
+      setDraggedItemId(null);
+    }
+  };
+
   return (
     <div>
       <h2 className="text-2xl font-semibold text-gray-800 mb-6">Listado</h2>
       <button
-        onClick={() => setIsCreateModalOpen(true)}
+        onClick={openCreateModal}
         className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 mb-4 flex items-center"
       >
         <PlusIcon className="h-5 w-5 mr-2" />
@@ -437,19 +507,40 @@ function CrudModule({ resource, mainResourceIdField }) {
           <thead>
             <tr className="flex w-full">
               <th className="flex-1 py-2 px-4 border-b-2 border-gray-300 text-left leading-4 text-gray-700 tracking-wider">Título</th>
+              {isSortableResource && (
+                <th className="w-20 py-2 px-4 border-b-2 border-gray-300 text-left leading-4 text-gray-700 tracking-wider">Orden</th>
+              )}
               <th className="w-1/5 py-2 px-4 border-b-2 border-gray-300 text-left leading-4 text-gray-700 tracking-wider">Imagen</th>
               <th className="w-1/5 py-2 px-4 border-b-2 border-gray-300 text-right leading-4 text-gray-700 tracking-wider">Estado</th>
               <th className="w-1/4 py-2 px-4 border-b-2 border-gray-300 text-right leading-4 text-gray-700 tracking-wider">Opciones</th>
             </tr>
           </thead>
           <tbody className="flex flex-col w-full">
-            {items.filter(item => item[mainResourceIdField] === null).map((item) => (
-              <tr key={item.id} className="flex w-full">
+            {rootItems.map((item, index) => (
+              <tr
+                key={item.id}
+                className={`flex w-full ${Number(draggedItemId) === Number(item.id) ? 'opacity-60' : ''}`}
+                draggable={isSortableResource}
+                onDragStart={() => handleDragStart(item.id)}
+                onDragOver={(event) => {
+                  if (isSortableResource) {
+                    event.preventDefault();
+                  }
+                }}
+                onDrop={() => handleDrop(item.id)}
+              >
                 <td className="flex-1 py-2 px-4 border-b border-gray-200">
                   <div>
                     <strong className="block text-left">{item.title}</strong>
                   </div>
                 </td>
+                {isSortableResource && (
+                  <td className="w-20 py-2 px-4 border-b border-gray-200 text-left">
+                    <span className="inline-flex cursor-move select-none rounded bg-gray-100 px-2 py-1 text-sm text-gray-600">
+                      {index + 1}
+                    </span>
+                  </td>
+                )}
                 <td className="w-1/5 py-2 px-4 border-b border-gray-200 text-left">
                   {item.image ? (
                     <button onClick={() => openImageModal(item)} className="bg-gray-200 py-2 px-4 rounded-md flex items-center">
@@ -512,13 +603,22 @@ function CrudModule({ resource, mainResourceIdField }) {
             className="p-2 border border-gray-300 rounded-md"
           ></textarea>
           {isPortfolio && (
-            <input
-              type="url"
-              placeholder="URL del projecte"
-              value={newItem.project_url || ""}
-              onChange={(e) => setNewItem({ ...newItem, project_url: e.target.value })}
-              className="p-2 border border-gray-300 rounded-md"
-            />
+            <>
+              <input
+                type="url"
+                placeholder="URL del projecte"
+                value={newItem.project_url || ""}
+                onChange={(e) => setNewItem({ ...newItem, project_url: e.target.value })}
+                className="p-2 border border-gray-300 rounded-md"
+              />
+              <input
+                type="text"
+                placeholder="Skills / tecnologies"
+                value={newItem.skills || ""}
+                onChange={(e) => setNewItem({ ...newItem, skills: e.target.value })}
+                className="p-2 border border-gray-300 rounded-md"
+              />
+            </>
           )}
           <div className="flex space-x-2">
             <button onClick={handleCreateItem} className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600">Crear</button>
@@ -568,18 +668,32 @@ function CrudModule({ resource, mainResourceIdField }) {
                   className="p-2 border border-gray-300 rounded-md"
                 ></textarea>
                 {isPortfolio && (
-                  <input
-                    type="url"
-                    placeholder="URL del projecte"
-                    value={item.project_url || ""}
-                    onChange={(e) => {
-                      const updatedItems = editingItems.map(s =>
-                        Number(s.id_lang) === Number(item.id_lang) ? { ...s, project_url: e.target.value } : s
-                      );
-                      setEditingItems(updatedItems);
-                    }}
-                    className="p-2 border border-gray-300 rounded-md"
-                  />
+                  <>
+                    <input
+                      type="url"
+                      placeholder="URL del projecte"
+                      value={item.project_url || ""}
+                      onChange={(e) => {
+                        const updatedItems = editingItems.map(s =>
+                          Number(s.id_lang) === Number(item.id_lang) ? { ...s, project_url: e.target.value } : s
+                        );
+                        setEditingItems(updatedItems);
+                      }}
+                      className="p-2 border border-gray-300 rounded-md"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Skills / tecnologies"
+                      value={item.skills || ""}
+                      onChange={(e) => {
+                        const updatedItems = editingItems.map(s =>
+                          Number(s.id_lang) === Number(item.id_lang) ? { ...s, skills: e.target.value } : s
+                        );
+                        setEditingItems(updatedItems);
+                      }}
+                      className="p-2 border border-gray-300 rounded-md"
+                    />
+                  </>
                 )}
               </div>
             ))}

@@ -132,6 +132,22 @@
   line-height: 1.7;
 }
 
+.portfolio-skill-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.portfolio-skill-list span {
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #eef4f3;
+  color: #0d7669;
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .portfolio-link {
   display: inline-flex;
   align-items: center;
